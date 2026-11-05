@@ -49,8 +49,21 @@ const clearRefreshCookie = (res) => {
 export const login = asyncHandler(async (req, res) => {
   const { username, password } = req.body
 
-  // Find user (case-insensitive username) and select sensitive fields
-  const user = await User.findOne({ username: username.toLowerCase() })
+  if (!username || !password) {
+    throw ApiError.badRequest('Username and password are required')
+  }
+
+  const identifier = username.trim().toLowerCase()
+
+  // Find user by username, email, or employeeId
+  const user = await User.findOne({
+    $or: [
+      { username: identifier },
+      { email: identifier },
+      { employeeId: username.trim().toUpperCase() },
+      { employeeId: username.trim() },
+    ],
+  })
     .select('+passwordHash +loginAttempts +lockUntil +refreshTokens')
     .populate('role', 'name displayName permissions department')
 
@@ -71,8 +84,14 @@ export const login = asyncHandler(async (req, res) => {
     )
   }
 
-  // Verify password
-  const isMatch = await argon2.verify(user.passwordHash, password)
+  // Verify password safely without crashing if hash is corrupted
+  let isMatch = false
+  try {
+    isMatch = await argon2.verify(user.passwordHash, password)
+  } catch (err) {
+    logger.warn(`Password verification failed for ${user.username}: ${err.message}`)
+    isMatch = false
+  }
 
   if (!isMatch) {
     // Increment failed attempts

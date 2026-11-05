@@ -159,6 +159,11 @@ jobs:
               sleep 2
             done
 
+            # Seed roles and superadmin user if database is fresh
+            echo "🌱 Ensuring database is seeded with roles and superadmin account..."
+            docker exec athiran-crm-backend node scripts/seedRoles.js 2>/dev/null || true
+            docker exec athiran-crm-backend node scripts/seedAdmin.js 2>/dev/null || true
+
             if [ "$BACKEND_HEALTHY" != "true" ]; then
               echo "⚠️ Warning: Backend health check loop finished. Checking backend logs:"
               $DC logs --tail 30 backend || true

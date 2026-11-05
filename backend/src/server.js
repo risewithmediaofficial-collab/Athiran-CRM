@@ -13,12 +13,7 @@ const httpServer = createServer(app)
 // Socket.IO
 const io = new SocketIOServer(httpServer, {
   cors: {
-    origin: (origin, callback) => {
-      if (!origin || (env.IS_DEVELOPMENT && (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')))) {
-        return callback(null, true)
-      }
-      callback(null, [env.FRONTEND_URL, 'http://localhost:5173', 'http://localhost:5174'].includes(origin))
-    },
+    origin: true,
     methods: ['GET', 'POST'],
     credentials: true,
   },

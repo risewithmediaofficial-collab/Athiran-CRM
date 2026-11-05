@@ -10,7 +10,7 @@ export const env = {
   JWT_ACCESS_EXPIRES_IN: process.env.JWT_ACCESS_EXPIRES_IN || '15m',
   JWT_REFRESH_EXPIRES_IN: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
   COOKIE_SECURE: process.env.COOKIE_SECURE === 'true',
-  COOKIE_SAME_SITE: process.env.COOKIE_SAME_SITE || 'Strict',
+  COOKIE_SAME_SITE: process.env.COOKIE_SAME_SITE || 'Lax',
   FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:5173',
   RATE_LIMIT_WINDOW_MS: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 900000,
   RATE_LIMIT_MAX: parseInt(process.env.RATE_LIMIT_MAX) || 100,
