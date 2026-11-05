@@ -1,4 +1,5 @@
-import React, { forwardRef } from 'react'
+import React, { forwardRef, useState } from 'react'
+import { Eye, EyeOff } from 'lucide-react'
 
 export const Input = forwardRef(function Input(
   {
@@ -12,12 +13,17 @@ export const Input = forwardRef(function Input(
     className = '',
     id,
     type = 'text',
+    showPasswordToggle = type === 'password',
     ...props
   },
   ref
 ) {
+  const [showPassword, setShowPassword] = useState(false)
+  const isPasswordField = type === 'password'
+  const effectiveType = isPasswordField ? (showPassword ? 'text' : 'password') : type
   const inputId = id || props.name || Math.random().toString(36).substring(2, 9)
   const effectiveLeft = leftIcon || icon
+  const hasRightElement = rightIcon || (isPasswordField && showPasswordToggle)
 
   const renderIcon = (ic) => {
     if (!ic) return null
@@ -45,7 +51,7 @@ export const Input = forwardRef(function Input(
         <input
           ref={ref}
           id={inputId}
-          type={type}
+          type={effectiveType}
           onWheel={(e) => {
             if (type === 'number') {
               e.currentTarget.blur()
@@ -56,18 +62,29 @@ export const Input = forwardRef(function Input(
           }}
           className={`w-full h-10 rounded-xl border bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors ${
             effectiveLeft ? 'pl-9' : ''
-          } ${rightIcon ? 'pr-9' : ''} ${
+          } ${hasRightElement ? 'pr-10' : ''} ${
             error
               ? 'border-red-400 focus:ring-red-200 focus:border-red-500'
               : 'border-slate-200'
           } ${className}`}
           {...props}
         />
-        {rightIcon && (
+        {isPasswordField && showPasswordToggle ? (
+          <button
+            type="button"
+            tabIndex={-1}
+            onClick={() => setShowPassword((prev) => !prev)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none transition-colors p-1"
+            aria-label={showPassword ? 'Hide password' : 'Show password'}
+            title={showPassword ? 'Hide password' : 'Show password'}
+          >
+            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+          </button>
+        ) : rightIcon ? (
           <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none flex items-center justify-center">
             {renderIcon(rightIcon)}
           </div>
-        )}
+        ) : null}
       </div>
       {error && <p className="mt-1 text-xs text-red-500 font-medium">{error}</p>}
       {!error && helperText && (

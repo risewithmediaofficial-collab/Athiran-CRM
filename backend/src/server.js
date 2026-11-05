@@ -2,6 +2,7 @@ import { createServer } from 'http'
 import { Server as SocketIOServer } from 'socket.io'
 import app from './app.js'
 import { connectDB } from './config/database.js'
+import { seedInitialData } from './config/seedInitialData.js'
 import { env } from './config/environment.js'
 import { logger } from './utils/logger.js'
 import { initSocketIO } from './sockets/index.js'
@@ -29,6 +30,7 @@ app.set('io', io)
 const start = async () => {
   try {
     await connectDB()
+    await seedInitialData()
 
     initSocketIO(io)
     initJobs()
