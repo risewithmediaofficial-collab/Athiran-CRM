@@ -1,0 +1,20 @@
+{
+  "name": "athiran-motors-crm",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Athiran Motors — Enterprise Dealer CRM and Tractor Service Management System",
+  "scripts": {
+    "dev": "concurrently \"npm run dev --prefix frontend\" \"npm run dev --prefix backend\"",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "dev:backend": "npm run dev --prefix backend",
+    "build": "npm run build --prefix frontend",
+    "test:frontend": "npm run test --prefix frontend",
+    "test:backend": "npm run test --prefix backend",
+    "install:all": "npm install --prefix frontend && npm install --prefix backend",
+    "seed": "npm run seed --prefix backend"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0"
+  }
+}
+
