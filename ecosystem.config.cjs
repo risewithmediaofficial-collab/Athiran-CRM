@@ -8,11 +8,11 @@ module.exports = {
       exec_mode: 'cluster',
       env: {
         NODE_ENV: 'production',
-        PORT: process.env.PORT || 5000,
+        PORT: process.env.PORT || 5013,
       },
       env_development: {
         NODE_ENV: 'development',
-        PORT: 5000,
+        PORT: 5013,
       },
       watch: false,
       max_memory_restart: '500M',
@@ -22,3 +22,4 @@ module.exports = {
     },
   ],
 }
+

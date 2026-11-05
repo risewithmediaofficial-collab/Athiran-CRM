@@ -63,3 +63,4 @@ jobs:
         run: npm run build --prefix frontend
         env:
           NODE_ENV: production
+
