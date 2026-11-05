@@ -33,6 +33,12 @@ services:
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-athiran_motors_production_jwt_refresh_secret_min_64_characters_key_2026}
       COOKIE_SECURE: "false"
       TZ: Asia/Kolkata
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://127.0.0.1:5013/api/v1/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))\""]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 5s
     depends_on:
       - mongodb
     volumes:
@@ -60,3 +66,4 @@ volumes:
 networks:
   athiran-net:
     driver: bridge
+

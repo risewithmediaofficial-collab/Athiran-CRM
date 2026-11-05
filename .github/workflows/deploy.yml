@@ -1,0 +1,203 @@
+name: Deploy to Hostinger VPS
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: 🚀 Deploy to Hostinger VPS
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Execute Remote SSH Commands & Deploy Docker
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          port: 22
+          timeout: 60s
+          command_timeout: 15m
+          script: |
+            set -e
+
+            echo "=================================================="
+            echo "🚀 Starting Automated Deployment Pipeline on VPS"
+            echo "=================================================="
+
+            # 1. Resolve Docker Compose command (Compose V2 plugin or V1)
+            if docker compose version >/dev/null 2>&1; then
+              DC="docker compose"
+            elif command -v docker-compose >/dev/null 2>&1; then
+              DC="docker-compose"
+            else
+              echo "❌ Error: Docker Compose is not installed on this server!"
+              exit 1
+            fi
+            echo "Using Compose binary: $DC"
+
+            # 2. Locate active project directory (if existing compose project is in another path)
+            DEPLOY_DIR="/docker/athiran"
+            ACTIVE_CONTAINER=$(docker ps -q --filter "publish=98" | head -n 1)
+            if [ -z "$ACTIVE_CONTAINER" ]; then
+              ACTIVE_CONTAINER=$(docker ps -q --filter "publish=5013" | head -n 1)
+            fi
+
+            if [ -n "$ACTIVE_CONTAINER" ]; then
+              LABEL_DIR=$(docker inspect "$ACTIVE_CONTAINER" --format '{{ index .Config.Labels "com.docker.compose.project.working_dir" }}' 2>/dev/null || true)
+              if [ -n "$LABEL_DIR" ] && [ -d "$LABEL_DIR/.git" ]; then
+                echo "⚡ Discovered existing active compose directory: $LABEL_DIR"
+                DEPLOY_DIR="$LABEL_DIR"
+              fi
+            fi
+
+            echo "Deployment target directory: $DEPLOY_DIR"
+
+            # 3. Ensure repo exists and is valid git repository
+            if [ ! -d "$DEPLOY_DIR/.git" ]; then
+              echo "⚡ Initializing repository in $DEPLOY_DIR..."
+              mkdir -p "$DEPLOY_DIR"
+              git clone https://github.com/risewithmediaofficial-collab/Athiran-CRM.git "$DEPLOY_DIR"
+            fi
+
+            cd "$DEPLOY_DIR"
+
+            # 4. Pull and force-sync with latest origin/main
+            echo "📥 Fetching and syncing to latest origin/main..."
+            git fetch origin main
+            git reset --hard origin/main
+            git clean -fd
+
+            # 5. Ensure .env file exists and configure ports & database
+            if [ ! -f .env ]; then
+              echo "⚙️ Creating .env from backend/.env.example..."
+              if [ -f backend/.env.example ]; then
+                cp backend/.env.example .env
+              else
+                touch .env
+              fi
+            fi
+
+            # Ensure PORT is explicitly set to 5013
+            if grep -q "^PORT=" .env; then
+              sed -i 's/^PORT=.*/PORT=5013/' .env
+            else
+              echo "PORT=5013" >> .env
+            fi
+
+            # Ensure FRONTEND_URL is set to localhost:98
+            if grep -q "^FRONTEND_URL=" .env; then
+              sed -i 's|^FRONTEND_URL=.*|FRONTEND_URL=http://localhost:98|' .env
+            else
+              echo "FRONTEND_URL=http://localhost:98" >> .env
+            fi
+
+            # Ensure MONGO_URI in .env targets mongodb container host
+            sed -i 's|127.0.0.1:27017|mongodb:27017|g' .env 2>/dev/null || true
+            sed -i 's|localhost:27017|mongodb:27017|g' .env 2>/dev/null || true
+            sed -i 's|127.0.0.1:27029|mongodb:27017|g' .env 2>/dev/null || true
+
+            # Ensure JWT secrets are configured
+            if ! grep -q "^JWT_ACCESS_SECRET=" .env; then
+              echo "JWT_ACCESS_SECRET=athiran_motors_production_jwt_access_secret_min_64_characters_key_2026" >> .env
+            fi
+            if ! grep -q "^JWT_REFRESH_SECRET=" .env; then
+              echo "JWT_REFRESH_SECRET=athiran_motors_production_jwt_refresh_secret_min_64_characters_key_2026" >> .env
+            fi
+
+            # 6. Zero-Downtime Maintenance Mode Setup
+            echo "🛡️ Step 6: Initializing Zero-Downtime Maintenance Mode on port 98..."
+            docker pull nginx:alpine >/dev/null 2>&1 || true
+
+            # Free port 98 from old frontend
+            docker stop athiran-crm-frontend athiran_frontend 2>/dev/null || true
+            docker rm -f athiran-crm-frontend athiran_frontend 2>/dev/null || true
+            for port in 98; do
+              pids=$(docker ps -q --filter "publish=$port")
+              if [ -n "$pids" ]; then
+                echo "Clearing container holding port $port: $pids"
+                docker stop $pids 2>/dev/null || true
+                docker rm -f $pids 2>/dev/null || true
+              fi
+            done
+
+            # Launch lightweight maintenance container
+            docker rm -f athiran_maintenance 2>/dev/null || true
+            docker run -d --name athiran_maintenance --restart always \
+              -p 98:80 \
+              -v "$DEPLOY_DIR/maintenance/nginx.conf:/etc/nginx/conf.d/default.conf:ro" \
+              -v "$DEPLOY_DIR/maintenance/maintenance.html:/usr/share/nginx/html/maintenance.html:ro" \
+              nginx:alpine
+
+            echo "✅ Maintenance Mode is LIVE on port 98. Visitors will see the Under Maintenance screen."
+
+            # 7. Force rebuild without cache while maintenance mode is safely serving visitors
+            echo "🔨 Step 7: Building fresh Docker images with --no-cache..."
+            $DC build --no-cache
+
+            # 8. Start up database and backend services
+            echo "🚀 Step 8: Starting backend and database containers..."
+            $DC up -d mongodb backend
+
+            # 9. Verify backend health before cutting over
+            echo "⏳ Step 9: Waiting for backend service to become healthy..."
+            BACKEND_HEALTHY=false
+            for i in $(seq 1 40); do
+              STATUS=$(docker inspect --format='{{json .State.Health.Status}}' athiran-crm-backend 2>/dev/null || echo '"starting"')
+              if [ "$STATUS" = '"healthy"' ] || curl -sf http://127.0.0.1:5013/api/v1/health >/dev/null 2>&1; then
+                echo "✅ Backend service is healthy and ready to serve!"
+                BACKEND_HEALTHY=true
+                break
+              fi
+              echo "Waiting for backend health ($i/40, status: $STATUS)..."
+              sleep 2
+            done
+
+            if [ "$BACKEND_HEALTHY" != "true" ]; then
+              echo "⚠️ Warning: Backend health check loop finished. Checking backend logs:"
+              $DC logs --tail 30 backend || true
+            fi
+
+            # 10. Switch from Maintenance Mode to Production Frontend
+            echo "🔄 Step 10: Seamless switchover: Removing maintenance container and starting production frontend..."
+            docker stop athiran_maintenance 2>/dev/null || true
+            docker rm -f athiran_maintenance 2>/dev/null || true
+
+            for port in 98; do
+              pids=$(docker ps -q --filter "publish=$port")
+              if [ -n "$pids" ]; then
+                docker stop $pids 2>/dev/null || true
+                docker rm -f $pids 2>/dev/null || true
+              fi
+            done
+
+            if ! $DC up -d --force-recreate frontend; then
+              echo "❌ Frontend startup issue encountered. Restoring maintenance container for safety:"
+              docker run -d --name athiran_maintenance --restart always \
+                -p 98:80 \
+                -v "$DEPLOY_DIR/maintenance/nginx.conf:/etc/nginx/conf.d/default.conf:ro" \
+                -v "$DEPLOY_DIR/maintenance/maintenance.html:/usr/share/nginx/html/maintenance.html:ro" \
+                nginx:alpine 2>/dev/null || true
+              $DC logs --tail 50 backend 2>/dev/null || true
+              $DC logs --tail 50 frontend 2>/dev/null || true
+              exit 1
+            fi
+
+            # 11. Clean up dangling images to keep VPS disk healthy
+            echo "🧹 Step 11: Pruning unused images..."
+            docker image prune -f
+
+            # 12. Verify that services are up and healthy
+            echo "📊 Step 12: Final container status verification:"
+            sleep 3
+            $DC ps
+
+            echo "=================================================="
+            echo "✅ Deployment Successful! Athiran Motors CRM is Online!"
+            echo "=================================================="
