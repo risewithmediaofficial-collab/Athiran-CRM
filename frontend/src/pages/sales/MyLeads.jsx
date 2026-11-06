@@ -5,6 +5,7 @@ import leadsApi from '../../api/leads'
 import Breadcrumb from '../../components/navigation/Breadcrumb'
 import Button from '../../components/ui/Button'
 import Badge from '../../components/ui/Badge'
+import Select from '../../components/ui/Select'
 import DataTable from '../../components/ui/DataTable'
 import Pagination from '../../components/ui/Pagination'
 import {
@@ -220,37 +221,37 @@ export default function MyLeads() {
         </div>
 
         <div className="flex items-center gap-2 w-full md:w-auto">
-          <select
-            value={statusFilter}
-            onChange={(e) => {
-              setStatusFilter(e.target.value)
-              setPage(1)
-            }}
-            className="h-8 px-2.5 rounded-lg border border-border bg-surface text-xs text-content-primary focus:outline-none focus:ring-2 focus:ring-primary"
-          >
-            <option value="">All Statuses</option>
-            {Object.entries(LEAD_STATUSES).map(([val, lbl]) => (
-              <option key={val} value={val}>
-                {lbl}
-              </option>
-            ))}
-          </select>
+          <div className="min-w-[140px]">
+            <Select
+              size="sm"
+              value={statusFilter}
+              onChange={(e) => {
+                setStatusFilter(e.target.value)
+                setPage(1)
+              }}
+              options={[
+                { value: '', label: 'All Statuses' },
+                ...Object.entries(LEAD_STATUSES).map(([val, lbl]) => ({ value: val, label: lbl })),
+              ]}
+              placeholder="All Statuses"
+            />
+          </div>
 
-          <select
-            value={tempFilter}
-            onChange={(e) => {
-              setTempFilter(e.target.value)
-              setPage(1)
-            }}
-            className="h-8 px-2.5 rounded-lg border border-border bg-surface text-xs text-content-primary focus:outline-none focus:ring-2 focus:ring-primary"
-          >
-            <option value="">All Temperatures</option>
-            {Object.entries(LEAD_TEMPERATURES).map(([val, lbl]) => (
-              <option key={val} value={val}>
-                {lbl}
-              </option>
-            ))}
-          </select>
+          <div className="min-w-[150px]">
+            <Select
+              size="sm"
+              value={tempFilter}
+              onChange={(e) => {
+                setTempFilter(e.target.value)
+                setPage(1)
+              }}
+              options={[
+                { value: '', label: 'All Temperatures' },
+                ...Object.entries(LEAD_TEMPERATURES).map(([val, lbl]) => ({ value: val, label: lbl })),
+              ]}
+              placeholder="All Temperatures"
+            />
+          </div>
 
           {(statusFilter || tempFilter || search) && (
             <button

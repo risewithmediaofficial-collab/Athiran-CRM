@@ -20,6 +20,7 @@ import Button from '../../components/ui/Button'
 import Badge from '../../components/ui/Badge'
 import Modal from '../../components/ui/Modal'
 import Input from '../../components/ui/Input'
+import Select from '../../components/ui/Select'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import EmptyState from '../../components/ui/EmptyState'
 import { DEPARTMENTS, DEPARTMENT_DESIGNATIONS } from '../../constants'
@@ -294,17 +295,21 @@ export default function EmployeeList() {
           />
         </div>
 
-        <select
-          value={deptFilter}
-          onChange={(e) => setDeptFilter(e.target.value)}
-          className="px-3 py-2 text-xs font-medium rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-primary-500/20"
-        >
-          <option value="">All Departments</option>
-          <option value="sales">Sales Department</option>
-          <option value="service">Service & Workshop</option>
-          <option value="management">Management & Operations</option>
-          <option value="admin">Administration</option>
-        </select>
+        <div className="min-w-[170px]">
+          <Select
+            size="sm"
+            value={deptFilter}
+            onChange={(e) => setDeptFilter(e.target.value)}
+            options={[
+              { value: '', label: 'All Departments' },
+              { value: 'sales', label: 'Sales Department' },
+              { value: 'service', label: 'Service & Workshop' },
+              { value: 'management', label: 'Management & Operations' },
+              { value: 'admin', label: 'Administration' },
+            ]}
+            placeholder="All Departments"
+          />
+        </div>
       </div>
 
       {/* Employees Table */}
@@ -492,54 +497,48 @@ export default function EmployeeList() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {/* Department Dropdown */}
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">Department *</label>
-              <select
+              <Select
+                label="Department"
+                required
                 value={formData.department}
                 onChange={(e) => handleDepartmentChange(e.target.value)}
-                className="w-full h-9 px-3 text-sm rounded-xl border border-slate-200 bg-white focus:outline-hidden focus:ring-2 focus:ring-primary-500/20"
-                required
-              >
-                {Object.entries(DEPARTMENTS).map(([key, label]) => (
-                  <option key={key} value={key}>
-                    {label}
-                  </option>
-                ))}
-              </select>
+                options={Object.entries(DEPARTMENTS).map(([key, label]) => ({
+                  value: key,
+                  label,
+                }))}
+              />
             </div>
 
             {/* Contextual Designation Dropdown */}
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">Designation *</label>
-              <select
+              <Select
+                label="Designation"
+                required
                 value={formData.designation}
                 onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
-                className="w-full h-9 px-3 text-sm rounded-xl border border-slate-200 bg-white focus:outline-hidden focus:ring-2 focus:ring-primary-500/20"
-                required
-              >
-                {activeDesignations.map((desig) => (
-                  <option key={desig} value={desig}>
-                    {desig}
-                  </option>
-                ))}
-              </select>
+                options={activeDesignations.map((desig) => ({
+                  value: desig,
+                  label: desig,
+                }))}
+              />
             </div>
 
             {/* System Security Role Dropdown */}
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">Security Role *</label>
-              <select
+              <Select
+                label="Security Role"
+                required
                 value={formData.role}
                 onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                className="w-full h-9 px-3 text-sm rounded-xl border border-slate-200 bg-white focus:outline-hidden focus:ring-2 focus:ring-primary-500/20"
-                required
-              >
-                <option value="">-- Select Role --</option>
-                {roles.map((r) => (
-                  <option key={r._id} value={r._id}>
-                    {r.displayName || r.name} ({r.department})
-                  </option>
-                ))}
-              </select>
+                options={[
+                  { value: '', label: '-- Select Role --' },
+                  ...roles.map((r) => ({
+                    value: r._id,
+                    label: `${r.displayName || r.name} (${r.department})`,
+                  })),
+                ]}
+                placeholder="-- Select Role --"
+              />
             </div>
           </div>
 
@@ -620,67 +619,58 @@ export default function EmployeeList() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {/* Department Dropdown */}
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">Department *</label>
-              <select
+              <Select
+                label="Department"
+                required
                 value={formData.department}
                 onChange={(e) => handleDepartmentChange(e.target.value)}
-                className="w-full h-9 px-3 text-sm rounded-xl border border-slate-200 bg-white focus:outline-hidden focus:ring-2 focus:ring-primary-500/20"
-                required
-              >
-                {Object.entries(DEPARTMENTS).map(([key, label]) => (
-                  <option key={key} value={key}>
-                    {label}
-                  </option>
-                ))}
-              </select>
+                options={Object.entries(DEPARTMENTS).map(([key, label]) => ({
+                  value: key,
+                  label,
+                }))}
+              />
             </div>
 
             {/* Designation Dropdown */}
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">Designation *</label>
-              <select
+              <Select
+                label="Designation"
+                required
                 value={formData.designation}
                 onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
-                className="w-full h-9 px-3 text-sm rounded-xl border border-slate-200 bg-white focus:outline-hidden focus:ring-2 focus:ring-primary-500/20"
-                required
-              >
-                {activeDesignations.map((desig) => (
-                  <option key={desig} value={desig}>
-                    {desig}
-                  </option>
-                ))}
-              </select>
+                options={activeDesignations.map((desig) => ({
+                  value: desig,
+                  label: desig,
+                }))}
+              />
             </div>
 
             {/* Role Dropdown */}
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">Role *</label>
-              <select
+              <Select
+                label="Role"
+                required
                 value={formData.role}
                 onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                className="w-full h-9 px-3 text-sm rounded-xl border border-slate-200 bg-white focus:outline-hidden focus:ring-2 focus:ring-primary-500/20"
-                required
-              >
-                {roles.map((r) => (
-                  <option key={r._id} value={r._id}>
-                    {r.displayName || r.name} ({r.department})
-                  </option>
-                ))}
-              </select>
+                options={roles.map((r) => ({
+                  value: r._id,
+                  label: `${r.displayName || r.name} (${r.department})`,
+                }))}
+              />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1.5">Account Status</label>
-            <select
+            <Select
+              label="Account Status"
               value={formData.accountStatus}
               onChange={(e) => setFormData({ ...formData, accountStatus: e.target.value })}
-              className="w-full h-9 px-3 text-sm rounded-xl border border-slate-200 bg-white focus:outline-hidden focus:ring-2 focus:ring-primary-500/20"
-            >
-              <option value="active">Active (Access Allowed)</option>
-              <option value="inactive">Inactive (Temporarily Disabled)</option>
-              <option value="suspended">Suspended</option>
-            </select>
+              options={[
+                { value: 'active', label: 'Active (Access Allowed)' },
+                { value: 'inactive', label: 'Inactive (Temporarily Disabled)' },
+                { value: 'suspended', label: 'Suspended' },
+              ]}
+            />
           </div>
 
           <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-2.5">

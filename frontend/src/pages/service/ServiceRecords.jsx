@@ -24,6 +24,7 @@ import { serviceApi } from '../../api/service'
 import Button from '../../components/ui/Button'
 import Badge from '../../components/ui/Badge'
 import Modal from '../../components/ui/Modal'
+import Select from '../../components/ui/Select'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import EmptyState from '../../components/ui/EmptyState'
 
@@ -164,32 +165,40 @@ export default function ServiceRecords() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-2 text-xs font-medium rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-primary-500/20"
-          >
-            <option value="">All Statuses</option>
-            <option value="scheduled">Scheduled</option>
-            <option value="in_progress">In Progress</option>
-            <option value="waiting_parts">Waiting Parts</option>
-            <option value="completed">Completed</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
+          <div className="min-w-[140px]">
+            <Select
+              size="sm"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              options={[
+                { value: '', label: 'All Statuses' },
+                { value: 'scheduled', label: 'Scheduled' },
+                { value: 'in_progress', label: 'In Progress' },
+                { value: 'waiting_parts', label: 'Waiting Parts' },
+                { value: 'completed', label: 'Completed' },
+                { value: 'cancelled', label: 'Cancelled' },
+              ]}
+              placeholder="All Statuses"
+            />
+          </div>
 
-          <select
-            value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value)}
-            className="px-3 py-2 text-xs font-medium rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-primary-500/20"
-          >
-            <option value="">All Service Types</option>
-            <option value="first_free">1st Free Service</option>
-            <option value="second_free">2nd Free Service</option>
-            <option value="routine_paid">Routine Paid Maintenance</option>
-            <option value="major_overhaul">Major Engine Overhaul</option>
-            <option value="breakdown_repair">Breakdown / Field Repair</option>
-            <option value="warranty_repair">Warranty Replacement</option>
-          </select>
+          <div className="min-w-[180px]">
+            <Select
+              size="sm"
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value)}
+              options={[
+                { value: '', label: 'All Service Types' },
+                { value: 'first_free', label: '1st Free Service' },
+                { value: 'second_free', label: '2nd Free Service' },
+                { value: 'routine_paid', label: 'Routine Paid Maintenance' },
+                { value: 'major_overhaul', label: 'Major Engine Overhaul' },
+                { value: 'breakdown_repair', label: 'Breakdown / Field Repair' },
+                { value: 'warranty_repair', label: 'Warranty Replacement' },
+              ]}
+              placeholder="All Service Types"
+            />
+          </div>
         </div>
       </div>
 
@@ -524,18 +533,19 @@ export default function ServiceRecords() {
           )}
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Job Card Status *</label>
-            <select
+            <Select
+              label="Job Card Status"
+              required
               value={editStatus}
               onChange={(e) => setEditStatus(e.target.value)}
-              className="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 bg-white focus:outline-hidden focus:ring-2 focus:ring-primary-500/20"
-            >
-              <option value="scheduled">Scheduled</option>
-              <option value="in_progress">In Progress (Bay Occupied)</option>
-              <option value="waiting_parts">Waiting Parts / Spares</option>
-              <option value="completed">Completed & Ready for Delivery</option>
-              <option value="cancelled">Cancelled</option>
-            </select>
+              options={[
+                { value: 'scheduled', label: 'Scheduled' },
+                { value: 'in_progress', label: 'In Progress (Bay Occupied)' },
+                { value: 'waiting_parts', label: 'Waiting Parts / Spares' },
+                { value: 'completed', label: 'Completed & Ready for Delivery' },
+                { value: 'cancelled', label: 'Cancelled' },
+              ]}
+            />
           </div>
 
           <div>

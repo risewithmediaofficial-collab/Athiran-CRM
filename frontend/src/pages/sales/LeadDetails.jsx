@@ -179,18 +179,18 @@ export default function LeadDetails() {
 
         <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
           {/* Quick status selector */}
-          <select
-            value={lead.status}
-            onChange={(e) => statusMutation.mutate(e.target.value)}
-            disabled={statusMutation.isPending}
-            className="h-8 px-2.5 rounded-lg border border-border bg-surface text-xs font-semibold text-content-primary focus:outline-none focus:ring-1 focus:ring-primary shadow-xs"
-          >
-            {Object.entries(LEAD_STATUSES).map(([val, lbl]) => (
-              <option key={val} value={val}>
-                Status: {lbl}
-              </option>
-            ))}
-          </select>
+          <div className="min-w-[170px]">
+            <Select
+              size="sm"
+              value={lead.status}
+              onChange={(e) => statusMutation.mutate(e.target.value)}
+              disabled={statusMutation.isPending}
+              options={Object.entries(LEAD_STATUSES).map(([val, lbl]) => ({
+                value: val,
+                label: `Status: ${lbl}`,
+              }))}
+            />
+          </div>
 
           <Button
             variant="secondary"

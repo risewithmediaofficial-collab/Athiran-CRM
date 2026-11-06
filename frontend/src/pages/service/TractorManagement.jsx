@@ -395,35 +395,34 @@ export default function TractorManagement() {
           )}
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Select Customer *</label>
-            <select
+            <Select
+              label="Select Customer"
+              required
               value={formData.customer}
               onChange={(e) => setFormData({ ...formData, customer: e.target.value })}
-              className="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 bg-white focus:outline-hidden focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
-              required
-            >
-              <option value="">-- Choose Customer Owner --</option>
-              {customers.map((c) => (
-                <option key={c._id} value={c._id}>
-                  {c.customerName || c.fullName || 'Customer'} ({c.mobile || c.primaryMobile || 'No Phone'})
-                </option>
-              ))}
-            </select>
+              options={[
+                { value: '', label: '-- Choose Customer Owner --' },
+                ...customers.map((c) => ({
+                  value: c._id,
+                  label: `${c.customerName || c.fullName || 'Customer'} (${c.mobile || c.primaryMobile || 'No Phone'})`,
+                })),
+              ]}
+              placeholder="-- Choose Customer Owner --"
+            />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Tractor Model *</label>
-            <select
+            <Select
+              label="Tractor Model"
+              required
               value={formData.model}
               onChange={(e) => setFormData({ ...formData, model: e.target.value })}
-              className="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-200 bg-white focus:outline-hidden focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all font-medium text-slate-800"
-              required
-            >
-              <option value="">-- Select Tractor Model --</option>
-              {TRACTOR_MODELS.map((m) => (
-                <option key={m} value={m}>{m}</option>
-              ))}
-            </select>
+              options={[
+                { value: '', label: '-- Select Tractor Model --' },
+                ...TRACTOR_MODELS.map((m) => ({ value: m, label: m })),
+              ]}
+              placeholder="-- Select Tractor Model --"
+            />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -465,16 +464,16 @@ export default function TractorManagement() {
               onChange={(e) => setFormData({ ...formData, currentEngineHours: e.target.value })}
             />
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Service Interval</label>
-              <select
+              <Select
+                label="Service Interval"
                 value={formData.serviceIntervalHours}
                 onChange={(e) => setFormData({ ...formData, serviceIntervalHours: Number(e.target.value) })}
-                className="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-200 bg-white focus:outline-hidden focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all font-medium text-slate-800"
-              >
-                <option value={250}>250 Hours (Recommended Standard)</option>
-                <option value={500}>500 Hours (Extended Duty Cycle)</option>
-                <option value={100}>100 Hours (Initial Run-in Period)</option>
-              </select>
+                options={[
+                  { value: 250, label: '250 Hours (Recommended Standard)' },
+                  { value: 500, label: '500 Hours (Extended Duty Cycle)' },
+                  { value: 100, label: '100 Hours (Initial Run-in Period)' },
+                ]}
+              />
             </div>
           </div>
 
@@ -505,18 +504,17 @@ export default function TractorManagement() {
           )}
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Tractor Model *</label>
-            <select
+            <Select
+              label="Tractor Model"
+              required
               value={formData.model}
               onChange={(e) => setFormData({ ...formData, model: e.target.value })}
-              className="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-200 bg-white focus:outline-hidden focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all font-medium text-slate-800"
-              required
-            >
-              <option value="">-- Select Tractor Model --</option>
-              {TRACTOR_MODELS.map((m) => (
-                <option key={m} value={m}>{m}</option>
-              ))}
-            </select>
+              options={[
+                { value: '', label: '-- Select Tractor Model --' },
+                ...TRACTOR_MODELS.map((m) => ({ value: m, label: m })),
+              ]}
+              placeholder="-- Select Tractor Model --"
+            />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -554,16 +552,16 @@ export default function TractorManagement() {
               onChange={(e) => setFormData({ ...formData, currentEngineHours: e.target.value })}
             />
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Service Interval</label>
-              <select
+              <Select
+                label="Service Interval"
                 value={formData.serviceIntervalHours}
                 onChange={(e) => setFormData({ ...formData, serviceIntervalHours: Number(e.target.value) })}
-                className="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-200 bg-white focus:outline-hidden focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all font-medium text-slate-800"
-              >
-                <option value={250}>250 Hours (Recommended Standard)</option>
-                <option value={500}>500 Hours (Extended Duty Cycle)</option>
-                <option value={100}>100 Hours (Initial Run-in Period)</option>
-              </select>
+                options={[
+                  { value: 250, label: '250 Hours (Recommended Standard)' },
+                  { value: 500, label: '500 Hours (Extended Duty Cycle)' },
+                  { value: 100, label: '100 Hours (Initial Run-in Period)' },
+                ]}
+              />
             </div>
           </div>
 

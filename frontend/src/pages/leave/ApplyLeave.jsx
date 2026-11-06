@@ -4,6 +4,7 @@ import { Calendar, ArrowLeft, Send, AlertCircle } from 'lucide-react'
 import { leaveApi } from '../../api/leave'
 import Button from '../../components/ui/Button'
 import Input from '../../components/ui/Input'
+import Select from '../../components/ui/Select'
 
 export default function ApplyLeave() {
   const navigate = useNavigate()
@@ -72,17 +73,18 @@ export default function ApplyLeave() {
 
       <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-6 space-y-5">
         <div>
-          <label className="block text-xs font-semibold text-slate-700 mb-1">Leave Category *</label>
-          <select
+          <Select
+            label="Leave Category"
+            required
             value={formData.leaveType}
             onChange={(e) => setFormData({ ...formData, leaveType: e.target.value })}
-            className="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 bg-white focus:outline-hidden focus:ring-2 focus:ring-primary-500/20"
-          >
-            <option value="casual">Casual Leave (CL)</option>
-            <option value="sick">Sick Leave (SL)</option>
-            <option value="emergency">Emergency / Personal Leave</option>
-            <option value="earned">Earned / Privilege Leave</option>
-          </select>
+            options={[
+              { value: 'casual', label: 'Casual Leave (CL)' },
+              { value: 'sick', label: 'Sick Leave (SL)' },
+              { value: 'emergency', label: 'Emergency / Personal Leave' },
+              { value: 'earned', label: 'Earned / Privilege Leave' },
+            ]}
+          />
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

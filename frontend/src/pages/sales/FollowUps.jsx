@@ -22,6 +22,7 @@ import Button from '../../components/ui/Button'
 import Badge from '../../components/ui/Badge'
 import Modal from '../../components/ui/Modal'
 import Input from '../../components/ui/Input'
+import Select from '../../components/ui/Select'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import EmptyState from '../../components/ui/EmptyState'
 
@@ -387,37 +388,38 @@ export default function FollowUps() {
           )}
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Select Customer Lead *</label>
-            <select
+            <Select
+              label="Select Customer Lead"
+              required
               value={formData.lead}
               onChange={(e) => setFormData({ ...formData, lead: e.target.value })}
-              className="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 bg-white focus:outline-hidden focus:ring-2 focus:ring-primary-500/20"
-              required
-            >
-              <option value="">-- Choose Lead --</option>
-              {leads.map((l) => (
-                <option key={l._id} value={l._id}>
-                  {l.customerName} ({l.primaryMobile || l.mobileNumber}) - {l.interestedModel || l.tractorModel || 'Inquiry'}
-                </option>
-              ))}
-            </select>
+              options={[
+                { value: '', label: '-- Choose Lead --' },
+                ...leads.map((l) => ({
+                  value: l._id,
+                  label: `${l.customerName} (${l.primaryMobile || l.mobileNumber}) - ${l.interestedModel || l.tractorModel || 'Inquiry'}`,
+                })),
+              ]}
+              placeholder="-- Choose Lead --"
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Interaction Channel *</label>
-              <select
+              <Select
+                label="Interaction Channel"
+                required
                 value={formData.type}
                 onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                className="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 bg-white focus:outline-hidden focus:ring-2 focus:ring-primary-500/20"
-              >
-                <option value="call">Phone Call</option>
-                <option value="whatsapp">WhatsApp</option>
-                <option value="visit">Customer Farm Visit</option>
-                <option value="demo">Tractor Demonstration</option>
-                <option value="meeting">Showroom Meeting</option>
-                <option value="other">Other</option>
-              </select>
+                options={[
+                  { value: 'call', label: 'Phone Call' },
+                  { value: 'whatsapp', label: 'WhatsApp' },
+                  { value: 'visit', label: 'Customer Farm Visit' },
+                  { value: 'demo', label: 'Tractor Demonstration' },
+                  { value: 'meeting', label: 'Showroom Meeting' },
+                  { value: 'other', label: 'Other' },
+                ]}
+              />
             </div>
 
             <Input
@@ -475,19 +477,20 @@ export default function FollowUps() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Channel *</label>
-              <select
+              <Select
+                label="Channel"
+                required
                 value={formData.type}
                 onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                className="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 bg-white focus:outline-hidden focus:ring-2 focus:ring-primary-500/20"
-              >
-                <option value="call">Phone Call</option>
-                <option value="whatsapp">WhatsApp</option>
-                <option value="visit">Customer Farm Visit</option>
-                <option value="demo">Demonstration</option>
-                <option value="meeting">Showroom Meeting</option>
-                <option value="other">Other</option>
-              </select>
+                options={[
+                  { value: 'call', label: 'Phone Call' },
+                  { value: 'whatsapp', label: 'WhatsApp' },
+                  { value: 'visit', label: 'Customer Farm Visit' },
+                  { value: 'demo', label: 'Demonstration' },
+                  { value: 'meeting', label: 'Showroom Meeting' },
+                  { value: 'other', label: 'Other' },
+                ]}
+              />
             </div>
 
             <Input

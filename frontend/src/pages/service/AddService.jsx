@@ -14,6 +14,7 @@ import {
 import { serviceApi } from '../../api/service'
 import Button from '../../components/ui/Button'
 import Input from '../../components/ui/Input'
+import Select from '../../components/ui/Select'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 
 export default function AddService() {
@@ -214,8 +215,9 @@ export default function AddService() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Customer / Owner *</label>
-              <select
+              <Select
+                label="Customer / Owner"
+                required
                 value={formData.customer}
                 onChange={(e) => {
                   const newCustId = e.target.value
@@ -228,33 +230,32 @@ export default function AddService() {
                     tractor: shouldReset ? '' : formData.tractor,
                   })
                 }}
-                className="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 bg-white focus:outline-hidden focus:ring-2 focus:ring-primary-500/20"
-                required
-              >
-                <option value="">-- Choose Customer --</option>
-                {customers.map((c) => (
-                  <option key={c._id} value={c._id}>
-                    {c.customerName || c.fullName || 'Customer'} ({c.mobile || c.primaryMobile || 'No Phone'})
-                  </option>
-                ))}
-              </select>
+                options={[
+                  { value: '', label: '-- Choose Customer --' },
+                  ...customers.map((c) => ({
+                    value: c._id,
+                    label: `${c.customerName || c.fullName || 'Customer'} (${c.mobile || c.primaryMobile || 'No Phone'})`,
+                  })),
+                ]}
+                placeholder="-- Choose Customer --"
+              />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Tractor Model *</label>
-              <select
+              <Select
+                label="Tractor Model"
+                required
                 value={formData.tractor}
                 onChange={(e) => handleTractorChange(e.target.value)}
-                className="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 bg-white focus:outline-hidden focus:ring-2 focus:ring-primary-500/20"
-                required
-              >
-                <option value="">-- Select Tractor --</option>
-                {availableTractors.map((t) => (
-                  <option key={t._id} value={t._id}>
-                    {t.model || t.modelName || 'Tractor'} ({t.registrationNumber || t.chassisNumber || 'No Reg'}) - {t.currentEngineHours || 0} hrs
-                  </option>
-                ))}
-              </select>
+                options={[
+                  { value: '', label: '-- Select Tractor --' },
+                  ...availableTractors.map((t) => ({
+                    value: t._id,
+                    label: `${t.model || t.modelName || 'Tractor'} (${t.registrationNumber || t.chassisNumber || 'No Reg'}) - ${t.currentEngineHours || 0} hrs`,
+                  })),
+                ]}
+                placeholder="-- Select Tractor --"
+              />
               {formData.customer && availableTractors.length === 0 && (
                 <p className="mt-1.5 text-xs text-amber-600 flex items-center gap-1">
                   <span>No tractors registered for this customer yet.</span>
@@ -276,19 +277,20 @@ export default function AddService() {
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Service Type *</label>
-              <select
+              <Select
+                label="Service Type"
+                required
                 value={formData.serviceType}
                 onChange={(e) => setFormData({ ...formData, serviceType: e.target.value })}
-                className="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 bg-white focus:outline-hidden focus:ring-2 focus:ring-primary-500/20"
-              >
-                <option value="first_free">1st Free Service (50 hrs)</option>
-                <option value="second_free">2nd Free Service (250 hrs)</option>
-                <option value="routine_paid">Routine Paid Maintenance</option>
-                <option value="major_overhaul">Major Engine / Gearbox Overhaul</option>
-                <option value="breakdown_repair">Breakdown / Field Emergency</option>
-                <option value="warranty_repair">Warranty Replacement</option>
-              </select>
+                options={[
+                  { value: 'first_free', label: '1st Free Service (50 hrs)' },
+                  { value: 'second_free', label: '2nd Free Service (250 hrs)' },
+                  { value: 'routine_paid', label: 'Routine Paid Maintenance' },
+                  { value: 'major_overhaul', label: 'Major Engine / Gearbox Overhaul' },
+                  { value: 'breakdown_repair', label: 'Breakdown / Field Emergency' },
+                  { value: 'warranty_repair', label: 'Warranty Replacement' },
+                ]}
+              />
             </div>
 
             <Input
@@ -311,29 +313,29 @@ export default function AddService() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Service Location</label>
-              <select
+              <Select
+                label="Service Location"
                 value={formData.serviceLocation}
                 onChange={(e) => setFormData({ ...formData, serviceLocation: e.target.value })}
-                className="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 bg-white focus:outline-hidden focus:ring-2 focus:ring-primary-500/20"
-              >
-                <option value="dealership">Dealership Workshop Bay</option>
-                <option value="customer_field">Doorstep / Customer Farm Visit</option>
-              </select>
+                options={[
+                  { value: 'dealership', label: 'Dealership Workshop Bay' },
+                  { value: 'customer_field', label: 'Doorstep / Customer Farm Visit' },
+                ]}
+              />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Job Card Status</label>
-              <select
+              <Select
+                label="Job Card Status"
                 value={formData.status}
                 onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                className="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 bg-white focus:outline-hidden focus:ring-2 focus:ring-primary-500/20"
-              >
-                <option value="scheduled">Scheduled</option>
-                <option value="in_progress">In Progress (Bay Occupied)</option>
-                <option value="waiting_parts">Waiting Parts</option>
-                <option value="completed">Completed & Ready</option>
-              </select>
+                options={[
+                  { value: 'scheduled', label: 'Scheduled' },
+                  { value: 'in_progress', label: 'In Progress (Bay Occupied)' },
+                  { value: 'waiting_parts', label: 'Waiting Parts' },
+                  { value: 'completed', label: 'Completed & Ready' },
+                ]}
+              />
             </div>
           </div>
 

@@ -21,6 +21,7 @@ import Button from '../../components/ui/Button'
 import Badge from '../../components/ui/Badge'
 import Modal from '../../components/ui/Modal'
 import Input from '../../components/ui/Input'
+import Select from '../../components/ui/Select'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import EmptyState from '../../components/ui/EmptyState'
 import { TRACTOR_MODELS, TAMIL_NADU_DISTRICTS, INDIAN_STATES } from '../../constants'
@@ -483,18 +484,17 @@ export default function CustomerDetails() {
           )}
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Tractor Model *</label>
-            <select
+            <Select
+              label="Tractor Model"
+              required
               value={tractorForm.model}
               onChange={(e) => setTractorForm({ ...tractorForm, model: e.target.value })}
-              className="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-200 bg-white focus:outline-hidden focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all font-medium text-slate-800"
-              required
-            >
-              <option value="">-- Select Tractor Model --</option>
-              {TRACTOR_MODELS.map((m) => (
-                <option key={m} value={m}>{m}</option>
-              ))}
-            </select>
+              options={[
+                { value: '', label: '-- Select Tractor Model --' },
+                ...TRACTOR_MODELS.map((m) => ({ value: m, label: m })),
+              ]}
+              placeholder="-- Select Tractor Model --"
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -536,16 +536,16 @@ export default function CustomerDetails() {
               onChange={(e) => setTractorForm({ ...tractorForm, currentEngineHours: e.target.value })}
             />
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Service Interval</label>
-              <select
+              <Select
+                label="Service Interval"
                 value={tractorForm.serviceIntervalHours}
                 onChange={(e) => setTractorForm({ ...tractorForm, serviceIntervalHours: Number(e.target.value) })}
-                className="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-200 bg-white focus:outline-hidden focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all font-medium text-slate-800"
-              >
-                <option value={250}>250 Hours (Recommended Standard)</option>
-                <option value={500}>500 Hours (Extended Duty Cycle)</option>
-                <option value={100}>100 Hours (Initial Run-in Period)</option>
-              </select>
+                options={[
+                  { value: 250, label: '250 Hours (Recommended Standard)' },
+                  { value: 500, label: '500 Hours (Extended Duty Cycle)' },
+                  { value: 100, label: '100 Hours (Initial Run-in Period)' },
+                ]}
+              />
             </div>
           </div>
 
@@ -636,32 +636,27 @@ export default function CustomerDetails() {
               onChange={(e) => setEditCustForm({ ...editCustForm, village: e.target.value })}
             />
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">District</label>
-              <select
+              <Select
+                label="District"
                 value={editCustForm.district}
                 onChange={(e) => setEditCustForm({ ...editCustForm, district: e.target.value })}
-                className="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-200 bg-white focus:outline-hidden focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all font-medium text-slate-800"
-              >
-                <option value="">-- Select District --</option>
-                {TAMIL_NADU_DISTRICTS.map((d) => (
-                  <option key={d} value={d}>{d}</option>
-                ))}
-              </select>
+                options={[
+                  { value: '', label: '-- Select District --' },
+                  ...TAMIL_NADU_DISTRICTS.map((d) => ({ value: d, label: d })),
+                ]}
+                placeholder="-- Select District --"
+              />
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">State</label>
-              <select
+              <Select
+                label="State"
                 value={editCustForm.state}
                 onChange={(e) => setEditCustForm({ ...editCustForm, state: e.target.value })}
-                className="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-200 bg-white focus:outline-hidden focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all font-medium text-slate-800"
-              >
-                {INDIAN_STATES.map((s) => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
+                options={INDIAN_STATES.map((s) => ({ value: s, label: s }))}
+              />
             </div>
             <Input
               label="PIN Code"

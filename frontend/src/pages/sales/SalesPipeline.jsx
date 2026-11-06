@@ -5,6 +5,7 @@ import leadsApi from '../../api/leads'
 import Breadcrumb from '../../components/navigation/Breadcrumb'
 import Button from '../../components/ui/Button'
 import Badge from '../../components/ui/Badge'
+import Select from '../../components/ui/Select'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import { 
   Plus, 
@@ -268,18 +269,15 @@ export default function SalesPipeline() {
                             <ArrowRightLeft className="w-3 h-3 text-content-tertiary shrink-0" />
                             <span className="hidden sm:inline">Move:</span>
                           </div>
-                          <select
-                            value={lead.status === 'demo_planned' ? 'interested' : lead.status}
-                            onChange={(e) => handleMoveStage(lead._id, e.target.value)}
-                            className="text-[11px] font-medium py-1 px-1.5 rounded-lg border border-border bg-surface text-content-primary focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary cursor-pointer hover:bg-surface-raised transition-colors max-w-[145px]"
-                            title="Quickly move deal to another stage"
-                          >
-                            {PIPELINE_COLUMNS.map((c) => (
-                              <option key={c.id} value={c.id}>
-                                {c.label}
-                              </option>
-                            ))}
-                          </select>
+                          <div className="flex-1 min-w-0 max-w-[155px]">
+                            <Select
+                              size="sm"
+                              value={lead.status === 'demo_planned' ? 'interested' : lead.status}
+                              onChange={(e) => handleMoveStage(lead._id, e.target.value)}
+                              options={PIPELINE_COLUMNS.map((c) => ({ value: c.id, label: c.label }))}
+                              triggerClassName="text-[11px] font-medium h-7 py-0.5 px-2 rounded-lg border-border bg-surface text-content-primary shadow-none"
+                            />
+                          </div>
                           <button
                             onClick={() => navigate(`/leads/${lead._id}`)}
                             title="Open Full Lead Details"

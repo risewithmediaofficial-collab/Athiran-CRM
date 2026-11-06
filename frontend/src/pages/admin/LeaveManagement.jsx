@@ -17,6 +17,7 @@ import { usersApi } from '../../api/users'
 import Button from '../../components/ui/Button'
 import Badge from '../../components/ui/Badge'
 import Modal from '../../components/ui/Modal'
+import Select from '../../components/ui/Select'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import EmptyState from '../../components/ui/EmptyState'
 
@@ -356,20 +357,19 @@ export default function LeaveManagement() {
 
           {handoverOption === 'delegate_colleague' && (
             <div className="pt-2">
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Select Covering Staff Member *</label>
-              <select
+              <Select
+                label="Select Covering Staff Member"
+                required
                 value={delegateUserId}
                 onChange={(e) => setDelegateUserId(e.target.value)}
-                className="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 bg-white focus:outline-hidden focus:ring-2 focus:ring-primary-500/20"
-              >
-                {users
+                options={users
                   .filter((u) => u._id !== selectedLeave?.user?._id)
-                  .map((u) => (
-                    <option key={u._id} value={u._id}>
-                      {u.fullName} ({u.designation} - {u.department})
-                    </option>
-                  ))}
-              </select>
+                  .map((u) => ({
+                    value: u._id,
+                    label: `${u.fullName} (${u.designation} - ${u.department})`,
+                  }))}
+                placeholder="Choose a colleague"
+              />
             </div>
           )}
 

@@ -16,6 +16,7 @@ import {
 import { serviceApi } from '../../api/service'
 import Button from '../../components/ui/Button'
 import Input from '../../components/ui/Input'
+import Select from '../../components/ui/Select'
 import Modal from '../../components/ui/Modal'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import EmptyState from '../../components/ui/EmptyState'
@@ -399,32 +400,27 @@ export default function ServiceCustomers() {
               onChange={(e) => setFormData({ ...formData, village: e.target.value })}
             />
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">District</label>
-              <select
+              <Select
+                label="District"
                 value={formData.district}
                 onChange={(e) => setFormData({ ...formData, district: e.target.value })}
-                className="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-200 bg-white focus:outline-hidden focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all font-medium text-slate-800"
-              >
-                <option value="">-- Select District --</option>
-                {TAMIL_NADU_DISTRICTS.map((d) => (
-                  <option key={d} value={d}>{d}</option>
-                ))}
-              </select>
+                options={[
+                  { value: '', label: '-- Select District --' },
+                  ...TAMIL_NADU_DISTRICTS.map((d) => ({ value: d, label: d })),
+                ]}
+                placeholder="-- Select District --"
+              />
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">State</label>
-              <select
+              <Select
+                label="State"
                 value={formData.state}
                 onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                className="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-200 bg-white focus:outline-hidden focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all font-medium text-slate-800"
-              >
-                {INDIAN_STATES.map((s) => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
+                options={INDIAN_STATES.map((s) => ({ value: s, label: s }))}
+              />
             </div>
             <Input
               label="PIN Code"
@@ -507,32 +503,27 @@ export default function ServiceCustomers() {
               onChange={(e) => setFormData({ ...formData, village: e.target.value })}
             />
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">District</label>
-              <select
+              <Select
+                label="District"
                 value={formData.district}
                 onChange={(e) => setFormData({ ...formData, district: e.target.value })}
-                className="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-200 bg-white focus:outline-hidden focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all font-medium text-slate-800"
-              >
-                <option value="">-- Select District --</option>
-                {TAMIL_NADU_DISTRICTS.map((d) => (
-                  <option key={d} value={d}>{d}</option>
-                ))}
-              </select>
+                options={[
+                  { value: '', label: '-- Select District --' },
+                  ...TAMIL_NADU_DISTRICTS.map((d) => ({ value: d, label: d })),
+                ]}
+                placeholder="-- Select District --"
+              />
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">State</label>
-              <select
+              <Select
+                label="State"
                 value={formData.state}
                 onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                className="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-200 bg-white focus:outline-hidden focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all font-medium text-slate-800"
-              >
-                {INDIAN_STATES.map((s) => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
+                options={INDIAN_STATES.map((s) => ({ value: s, label: s }))}
+              />
             </div>
             <Input
               label="PIN Code"

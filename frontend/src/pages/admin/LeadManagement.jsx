@@ -17,6 +17,7 @@ import { usersApi } from '../../api/users'
 import Button from '../../components/ui/Button'
 import Badge from '../../components/ui/Badge'
 import Modal from '../../components/ui/Modal'
+import Select from '../../components/ui/Select'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import EmptyState from '../../components/ui/EmptyState'
 
@@ -143,35 +144,39 @@ export default function LeadManagement() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-2 text-xs font-medium rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white"
-          >
-            <option value="">All Statuses</option>
-            <option value="new">New</option>
-            <option value="contacted">Contacted</option>
-            <option value="interested">Interested</option>
-            <option value="followup_required">Follow-up Required</option>
-            <option value="visit_planned">Visit Planned</option>
-            <option value="negotiation">Negotiation</option>
-            <option value="booked">Booked</option>
-            <option value="converted">Converted</option>
-            <option value="lost">Lost</option>
-          </select>
+          <div className="min-w-[140px]">
+            <Select
+              size="sm"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              options={[
+                { value: '', label: 'All Statuses' },
+                { value: 'new', label: 'New' },
+                { value: 'contacted', label: 'Contacted' },
+                { value: 'interested', label: 'Interested' },
+                { value: 'followup_required', label: 'Follow-up Required' },
+                { value: 'visit_planned', label: 'Visit Planned' },
+                { value: 'negotiation', label: 'Negotiation' },
+                { value: 'booked', label: 'Booked' },
+                { value: 'converted', label: 'Converted' },
+                { value: 'lost', label: 'Lost' },
+              ]}
+              placeholder="All Statuses"
+            />
+          </div>
 
-          <select
-            value={userFilter}
-            onChange={(e) => setUserFilter(e.target.value)}
-            className="px-3 py-2 text-xs font-medium rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white"
-          >
-            <option value="">All Sales Executives</option>
-            {users.map((u) => (
-              <option key={u._id} value={u._id}>
-                {u.fullName}
-              </option>
-            ))}
-          </select>
+          <div className="min-w-[180px]">
+            <Select
+              size="sm"
+              value={userFilter}
+              onChange={(e) => setUserFilter(e.target.value)}
+              options={[
+                { value: '', label: 'All Sales Executives' },
+                ...users.map((u) => ({ value: u._id, label: u.fullName })),
+              ]}
+              placeholder="All Sales Executives"
+            />
+          </div>
         </div>
       </div>
 
@@ -306,19 +311,17 @@ export default function LeadManagement() {
           </p>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">New Sales Executive *</label>
-            <select
+            <Select
+              label="New Sales Executive"
+              required
               value={newAssignee}
               onChange={(e) => setNewAssignee(e.target.value)}
-              className="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 bg-white focus:outline-hidden focus:ring-2 focus:ring-primary-500/20"
-              required
-            >
-              {users.map((u) => (
-                <option key={u._id} value={u._id}>
-                  {u.fullName} ({u.employeeId || u.designation})
-                </option>
-              ))}
-            </select>
+              options={users.map((u) => ({
+                value: u._id,
+                label: `${u.fullName} (${u.employeeId || u.designation})`,
+              }))}
+              placeholder="Select an executive"
+            />
           </div>
 
           <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2.5">
