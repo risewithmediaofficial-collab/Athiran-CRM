@@ -474,10 +474,11 @@ export default function ServiceCustomers() {
                 { value: '', label: loadingLeads ? '-- Loading Leads... --' : `-- Select from All Leads (${leads.length} Available) --` },
                 ...leads.map((l) => ({
                   value: l._id,
-                  label: `${l.customerName} • ${l.primaryMobile}${l.village ? ` (${l.village})` : ''} — [${l.leadId}]${l.tractorModelInterested ? ` • ${l.tractorModelInterested}` : ''} [${l.status?.replace('_', ' ') || 'New'}]`,
+                  label: `${l.customerName} • ${l.primaryMobile}${l.village ? ` (${l.village})` : ''}`,
+                  description: `${l.leadId} • ${l.tractorModelInterested || 'General Requirement'}${l.status ? ` • [${l.status.replace('_', ' ')}]` : ''}`,
                 })),
               ]}
-              triggerClassName="bg-white text-xs font-semibold h-9 py-0.5 px-3 rounded-xl border-primary-200 hover:border-primary-400 focus:border-primary-500 text-slate-800 shadow-2xs"
+              triggerClassName="bg-white text-xs font-semibold h-10 px-3 rounded-xl border-primary-200 hover:border-primary-400 focus:border-primary-500 text-slate-800 shadow-2xs"
             />
 
             {selectedLeadId && (() => {
@@ -545,29 +546,25 @@ export default function ServiceCustomers() {
               value={formData.village}
               onChange={(e) => setFormData({ ...formData, village: e.target.value })}
             />
-            <div>
-              <Select
-                label="District"
-                value={formData.district}
-                onChange={(e) => setFormData({ ...formData, district: e.target.value })}
-                options={[
-                  { value: '', label: '-- Select District --' },
-                  ...TAMIL_NADU_DISTRICTS.map((d) => ({ value: d, label: d })),
-                ]}
-                placeholder="-- Select District --"
-              />
-            </div>
+            <Select
+              label="District"
+              value={formData.district}
+              onChange={(e) => setFormData({ ...formData, district: e.target.value })}
+              options={[
+                { value: '', label: '-- Select District --' },
+                ...TAMIL_NADU_DISTRICTS.map((d) => ({ value: d, label: d })),
+              ]}
+              placeholder="-- Select District --"
+            />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <Select
-                label="State"
-                value={formData.state}
-                onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                options={INDIAN_STATES.map((s) => ({ value: s, label: s }))}
-              />
-            </div>
+            <Select
+              label="State"
+              value={formData.state}
+              onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+              options={INDIAN_STATES.map((s) => ({ value: s, label: s }))}
+            />
             <Input
               label="PIN Code"
               placeholder="e.g. 638701"
@@ -648,29 +645,25 @@ export default function ServiceCustomers() {
               value={formData.village}
               onChange={(e) => setFormData({ ...formData, village: e.target.value })}
             />
-            <div>
-              <Select
-                label="District"
-                value={formData.district}
-                onChange={(e) => setFormData({ ...formData, district: e.target.value })}
-                options={[
-                  { value: '', label: '-- Select District --' },
-                  ...TAMIL_NADU_DISTRICTS.map((d) => ({ value: d, label: d })),
-                ]}
-                placeholder="-- Select District --"
-              />
-            </div>
+            <Select
+              label="District"
+              value={formData.district}
+              onChange={(e) => setFormData({ ...formData, district: e.target.value })}
+              options={[
+                { value: '', label: '-- Select District --' },
+                ...TAMIL_NADU_DISTRICTS.map((d) => ({ value: d, label: d })),
+              ]}
+              placeholder="-- Select District --"
+            />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <Select
-                label="State"
-                value={formData.state}
-                onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                options={INDIAN_STATES.map((s) => ({ value: s, label: s }))}
-              />
-            </div>
+            <Select
+              label="State"
+              value={formData.state}
+              onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+              options={INDIAN_STATES.map((s) => ({ value: s, label: s }))}
+            />
             <Input
               label="PIN Code"
               value={formData.pincode}

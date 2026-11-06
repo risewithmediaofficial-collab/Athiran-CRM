@@ -13,6 +13,7 @@ export const Select = forwardRef(function Select(
     required = false,
     className = '',
     triggerClassName = '',
+    contentClassName = '',
     id,
     placeholder = 'Select an option',
     value,
@@ -37,6 +38,7 @@ export const Select = forwardRef(function Select(
           return {
             value: String(val),
             label: String(lbl),
+            description: opt.description ? String(opt.description) : undefined,
             disabled: !!opt.disabled,
           }
         }
@@ -157,11 +159,11 @@ export const Select = forwardRef(function Select(
               : 'border-slate-200 shadow-sm'
           } ${triggerClassName}`}
         >
-          <span className="truncate block text-left">
+          <span className="truncate block text-left flex-1 min-w-0 pr-2">
             {selectedOption ? selectedOption.label : placeholder}
           </span>
           <RadixSelect.Icon asChild>
-            <ChevronDown className="w-4 h-4 text-slate-400 shrink-0 ml-2" />
+            <ChevronDown className="w-4 h-4 text-slate-400 shrink-0 ml-1.5" />
           </RadixSelect.Icon>
         </RadixSelect.Trigger>
 
@@ -169,7 +171,8 @@ export const Select = forwardRef(function Select(
           <RadixSelect.Content
             position="popper"
             sideOffset={4}
-            className="z-[9999] min-w-[var(--radix-select-trigger-width)] max-h-72 overflow-hidden rounded-xl border border-slate-200/90 bg-white text-slate-900 shadow-xl animate-in fade-in zoom-in-95 duration-100"
+            align="start"
+            className={`z-[9999] w-[var(--radix-select-trigger-width)] min-w-[var(--radix-select-trigger-width)] max-w-[var(--radix-select-trigger-width)] max-h-72 overflow-hidden rounded-xl border border-slate-200/90 bg-white text-slate-900 shadow-xl animate-in fade-in zoom-in-95 duration-100 ${contentClassName}`}
           >
             <RadixSelect.ScrollUpButton className="flex items-center justify-center py-1 text-slate-400 bg-slate-50">
               <ChevronUp className="w-4 h-4" />
@@ -185,9 +188,20 @@ export const Select = forwardRef(function Select(
                     disabled={opt.disabled}
                     className="relative flex w-full cursor-pointer select-none items-center rounded-lg py-2 pl-3 pr-8 text-sm outline-none transition-colors hover:bg-primary-50 hover:text-primary-700 data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-700 data-[state=checked]:font-semibold data-[state=checked]:text-primary-700 data-[state=checked]:bg-primary-50/70 data-[disabled]:pointer-events-none data-[disabled]:opacity-40"
                   >
-                    <RadixSelect.ItemText>{opt.label}</RadixSelect.ItemText>
-                    <RadixSelect.ItemIndicator className="absolute right-2 flex items-center justify-center text-primary-600">
-                      <Check className="w-4 h-4" />
+                    <div className="flex-1 min-w-0 pr-2 text-left">
+                      <RadixSelect.ItemText>
+                        <span className="truncate block font-medium">
+                          {opt.label}
+                        </span>
+                      </RadixSelect.ItemText>
+                      {opt.description && (
+                        <span className="truncate block text-xs text-slate-400 font-normal mt-0.5">
+                          {opt.description}
+                        </span>
+                      )}
+                    </div>
+                    <RadixSelect.ItemIndicator className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center justify-center text-primary-600">
+                      <Check className="w-4 h-4 shrink-0" />
                     </RadixSelect.ItemIndicator>
                   </RadixSelect.Item>
                 )
