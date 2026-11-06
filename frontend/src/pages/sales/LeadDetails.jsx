@@ -103,6 +103,29 @@ export default function LeadDetails() {
     }
   }
 
+  const handleConfirmReassign = async (e) => {
+    e.preventDefault()
+    if (!newAssignee) {
+      alert('Please select a sales executive.')
+      return
+    }
+    try {
+      setReassigning(true)
+      await leadsApi.reassignLead(id, {
+        newAssignedTo: newAssignee,
+        reason: reassignReason.trim() || 'Direct lead reassignment',
+      })
+      queryClient.invalidateQueries(['lead', id])
+      queryClient.invalidateQueries(['leadActivities', id])
+      setReassignModalOpen(false)
+      setReassignReason('')
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to reassign lead.')
+    } finally {
+      setReassigning(false)
+    }
+  }
+
   const handleRecordActivity = async (e) => {
     e.preventDefault()
     if (!activityDesc.trim()) return
