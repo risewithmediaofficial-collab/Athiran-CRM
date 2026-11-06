@@ -252,13 +252,35 @@ export default function SalesPipeline() {
                         </div>
 
                         {lead.estimatedBudget && (
-                          <div className="flex items-center justify-between text-[11px] text-content-secondary pt-1 mb-2.5 border-t border-border-subtle">
+                          <div className="flex items-center justify-between text-[11px] text-content-secondary pt-1 mb-2 border-t border-border-subtle">
                             <span>Budget</span>
                             <span className="font-semibold text-content-primary flex items-center font-mono">
                               ₹{Number(lead.estimatedBudget).toLocaleString('en-IN')}
                             </span>
                           </div>
                         )}
+
+                        {/* Initiated By & Assigned To */}
+                        <div className="flex flex-col gap-1 mb-2.5 pt-1.5 border-t border-border-subtle text-[10px]">
+                          <div className="flex items-center justify-between text-content-tertiary">
+                            <span className="flex items-center gap-1 text-slate-500 font-medium">
+                              <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
+                              <span>Initiated by:</span>
+                            </span>
+                            <span className="font-semibold text-slate-700 truncate max-w-[115px]" title={lead.createdBy?.fullName}>
+                              {lead.createdBy?.fullName || 'Admin'}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between text-content-tertiary">
+                            <span className="flex items-center gap-1 text-slate-500 font-medium">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                              <span>Assigned:</span>
+                            </span>
+                            <span className="font-semibold text-slate-800 truncate max-w-[115px]" title={lead.assignedTo?.fullName}>
+                              {lead.assignedTo?.fullName || 'Unassigned'}
+                            </span>
+                          </div>
+                        </div>
 
                         {/* Card Stage Selector & Quick Action Bar */}
                         <div

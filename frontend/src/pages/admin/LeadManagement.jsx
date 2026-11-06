@@ -199,6 +199,7 @@ export default function LeadManagement() {
                 <tr>
                   <th className="py-3.5 px-6">Customer / Inquiry</th>
                   <th className="py-3.5 px-6">Tractor Model</th>
+                  <th className="py-3.5 px-6">Initiated By</th>
                   <th className="py-3.5 px-6">Assigned Executive</th>
                   <th className="py-3.5 px-6">Status</th>
                   <th className="py-3.5 px-6">Lead Source</th>
@@ -222,11 +223,22 @@ export default function LeadManagement() {
                       </div>
                     </td>
                     <td className="py-4 px-6 text-xs text-slate-800 font-medium">
-                      {l.interestedModel || l.tractorModel || 'Tractor Model'}
+                      {l.tractorModelInterested || l.interestedModel || l.tractorModel || 'General Inquiry'}
+                    </td>
+                    <td className="py-4 px-6 text-xs text-slate-700">
+                      <div className="font-semibold text-slate-900">
+                        {l.createdBy?.fullName || 'Admin'}
+                      </div>
+                      <div className="text-[11px] text-slate-400">
+                        {l.createdBy?.employeeId ? `ID: ${l.createdBy.employeeId}` : (l.createdBy?.email || 'Initiator')}
+                      </div>
                     </td>
                     <td className="py-4 px-6 text-xs text-slate-600">
                       {l.assignedTo?.fullName ? (
-                        <span className="font-semibold text-slate-800">{l.assignedTo.fullName}</span>
+                        <div>
+                          <span className="font-semibold text-slate-800 block">{l.assignedTo.fullName}</span>
+                          <span className="text-[11px] text-slate-400 block">{l.assignedTo.designation || 'Sales'}</span>
+                        </div>
                       ) : (
                         <span className="text-amber-600 font-medium bg-amber-50 px-2 py-0.5 rounded-md">Unassigned</span>
                       )}

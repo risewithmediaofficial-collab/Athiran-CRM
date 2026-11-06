@@ -1,7 +1,7 @@
 import express from 'express'
 import { getUsers, createUser, getUserById, updateUser, updateUserStatus, resetUserPassword, getUserPerformance, deleteUser } from '../controllers/user.controller.js'
 import { authenticate } from '../middleware/authenticate.js'
-import { authorize } from '../middleware/authorize.js'
+import { authorize, authorizeAny } from '../middleware/authorize.js'
 import { validate } from '../middleware/validate.js'
 import { body, param } from 'express-validator'
 import { PERMISSIONS } from '../constants/permissions.js'
@@ -9,7 +9,13 @@ import { PERMISSIONS } from '../constants/permissions.js'
 const router = express.Router()
 router.use(authenticate)
 
-router.get('/', authorize(PERMISSIONS.EMPLOYEES_VIEW_ALL), getUsers)
+router.get('/', authorizeAny(
+  PERMISSIONS.EMPLOYEES_VIEW_ALL,
+  PERMISSIONS.LEADS_ASSIGN,
+  PERMISSIONS.LEADS_CREATE,
+  PERMISSIONS.LEADS_VIEW_ALL,
+  PERMISSIONS.FOLLOWUPS_VIEW_ALL
+), getUsers)
 router.post('/', authorize(PERMISSIONS.EMPLOYEES_CREATE),
   [
     body('fullName').trim().notEmpty().withMessage('Full name is required'),

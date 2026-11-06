@@ -5,6 +5,8 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import leadsApi from '../../api/leads'
+import usersApi from '../../api/users'
+import { useAuth } from '../../context/AuthContext'
 import Breadcrumb from '../../components/navigation/Breadcrumb'
 import Button from '../../components/ui/Button'
 import Input from '../../components/ui/Input'
@@ -22,6 +24,8 @@ import {
   ArrowLeft,
   Trash2,
   Calendar,
+  UserCheck,
+  ShieldCheck,
 } from 'lucide-react'
 import { 
   LEAD_SOURCES, 
@@ -80,14 +84,29 @@ const leadEditSchema = z.object({
   financingRequired: z.boolean().default(false),
   exchangeRequired: z.boolean().default(false),
   remarks: z.string().optional(),
+  assignedTo: z.string().optional(),
 })
 
 export default function EditLead() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { user: currentUser, isAdmin, hasPermission } = useAuth()
   const [serverError, setServerError] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [users, setUsers] = useState([])
+
+  useEffect(() => {
+    usersApi
+      .getUsers({ limit: 100, accountStatus: 'active' })
+      .then((res) => {
+        const uList = res.data?.data?.users || (Array.isArray(res.data?.data) ? res.data?.data : [])
+        setUsers(uList)
+      })
+      .catch((err) => {
+        console.error('Failed to load users for assignment', err)
+      })
+  }, [])
 
   const { data: leadData, isLoading } = useQuery({
     queryKey: ['lead', id],
@@ -133,6 +152,7 @@ export default function EditLead() {
         financingRequired: Boolean(leadData.financingRequired),
         exchangeRequired: Boolean(leadData.exchangeRequired),
         remarks: leadData.remarks || '',
+        assignedTo: leadData.assignedTo?._id || leadData.assignedTo || '',
       })
     }
   }, [leadData, reset])
@@ -407,6 +427,54 @@ export default function EditLead() {
               className="w-full rounded-lg border border-border p-3 text-sm text-content-primary focus:outline-none focus:ring-2 focus:ring-primary"
               {...register('remarks')}
             />
+          </div>
+        </div>
+
+        {/* Section 4: Dealership Assignment & Initiator Info */}
+        <div className="card space-y-4 border-l-4 border-l-primary">
+          <div className="flex items-center justify-between pb-3 border-b border-border">
+            <div className="flex items-center gap-2">
+              <UserCheck className="w-4 h-4 text-primary" />
+              <h2 className="text-sm font-semibold text-content-primary">
+                4. Dealership Assignment & Initiator
+              </h2>
+            </div>
+            <div className="flex items-center gap-1.5 text-xs text-primary font-medium bg-primary-50 px-2.5 py-1 rounded-lg">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>
+                Initiated By: <strong>{leadData?.createdBy?.fullName || 'Administrator'}</strong>
+                {leadData?.createdAt && ` (${new Date(leadData.createdAt).toLocaleDateString('en-IN')})`}
+              </span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+            <div>
+              <Select
+                label="Assigned Sales Executive / Rep"
+                options={[
+                  ...(leadData?.assignedTo?._id
+                    ? []
+                    : [{ value: '', label: '-- Select Assignee --' }]),
+                  ...users.map((u) => ({
+                    value: u._id,
+                    label: `${u.fullName} • ${u.role?.displayName || u.department || 'Sales'}${u.employeeId ? ` (${u.employeeId})` : ''}`,
+                  })),
+                ]}
+                helperText="Change or maintain the sales executive assigned to this lead."
+                {...register('assignedTo')}
+              />
+            </div>
+
+            <div className="bg-surface-raised p-3.5 rounded-xl border border-border text-xs text-content-secondary space-y-1">
+              <div className="font-semibold text-content-primary flex items-center gap-1.5">
+                <User className="w-3.5 h-3.5 text-primary" />
+                <span>Executive Responsibility:</span>
+              </div>
+              <p>
+                The assigned representative is responsible for conducting customer calls, scheduling demos, and logging follow-up outcomes.
+              </p>
+            </div>
           </div>
         </div>
 

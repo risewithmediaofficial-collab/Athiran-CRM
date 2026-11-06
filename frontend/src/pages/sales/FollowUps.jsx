@@ -14,10 +14,15 @@ import {
   Trash2, 
   Check, 
   AlertCircle,
-  Eye 
+  Eye,
+  UserCheck,
+  ShieldCheck,
+  User
 } from 'lucide-react'
 import { followupsApi } from '../../api/followups'
 import { leadsApi } from '../../api/leads'
+import usersApi from '../../api/users'
+import { useAuth } from '../../context/AuthContext'
 import Button from '../../components/ui/Button'
 import Badge from '../../components/ui/Badge'
 import Modal from '../../components/ui/Modal'
@@ -28,8 +33,10 @@ import EmptyState from '../../components/ui/EmptyState'
 
 export default function FollowUps() {
   const navigate = useNavigate()
+  const { user: currentUser, isAdmin, hasPermission } = useAuth()
   const [followups, setFollowups] = useState([])
   const [leads, setLeads] = useState([])
+  const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [tab, setTab] = useState('all') // all, today, overdue, completed
@@ -46,6 +53,7 @@ export default function FollowUps() {
   // Schedule / Edit Form
   const [formData, setFormData] = useState({
     lead: '',
+    assignedTo: '',
     type: 'call',
     scheduledDate: new Date().toISOString().split('T')[0],
     scheduledTime: '10:00',
@@ -58,14 +66,17 @@ export default function FollowUps() {
   const fetchFollowups = async () => {
     try {
       setLoading(true)
-      const [fRes, lRes] = await Promise.all([
+      const [fRes, lRes, uRes] = await Promise.all([
         followupsApi.getFollowUps({ search, tab }),
         leadsApi.getLeads({ limit: 100 }),
+        usersApi.getUsers({ limit: 100, accountStatus: 'active' }).catch(() => ({ data: { data: [] } })),
       ])
       const fData = fRes.data?.data
       setFollowups(Array.isArray(fData) ? fData : fData?.followUps || [])
       const lData = lRes.data?.data
       setLeads(Array.isArray(lData) ? lData : lData?.leads || [])
+      const uData = uRes.data?.data
+      setUsers(Array.isArray(uData) ? uData : uData?.users || [])
     } catch (err) {
       console.error('Failed to load follow-ups:', err)
     } finally {
@@ -78,8 +89,10 @@ export default function FollowUps() {
   }, [search, tab])
 
   const handleOpenSchedule = () => {
+    const firstLead = leads[0]
     setFormData({
-      lead: leads[0]?._id || '',
+      lead: firstLead?._id || '',
+      assignedTo: firstLead?.assignedTo?._id || firstLead?.assignedTo || currentUser?._id || '',
       type: 'call',
       scheduledDate: new Date().toISOString().split('T')[0],
       scheduledTime: '10:00',
@@ -93,6 +106,7 @@ export default function FollowUps() {
     setSelectedFollowup(f)
     setFormData({
       lead: f.lead?._id || f.lead || '',
+      assignedTo: f.assignedTo?._id || f.assignedTo || currentUser?._id || '',
       type: f.type || 'call',
       scheduledDate: f.scheduledDate ? new Date(f.scheduledDate).toISOString().split('T')[0] : '',
       scheduledTime: f.scheduledTime || '10:00',
@@ -125,6 +139,7 @@ export default function FollowUps() {
       setFormError('')
       await followupsApi.createFollowUp({
         ...formData,
+        assignedTo: formData.assignedTo || currentUser?._id,
         scheduledDate: new Date(`${formData.scheduledDate}T${formData.scheduledTime || '10:00'}:00`).toISOString(),
       })
       setIsScheduleOpen(false)
@@ -143,6 +158,7 @@ export default function FollowUps() {
       setFormError('')
       await followupsApi.updateFollowUp(selectedFollowup._id, {
         ...formData,
+        assignedTo: formData.assignedTo || selectedFollowup.assignedTo?._id || currentUser?._id,
         scheduledDate: new Date(`${formData.scheduledDate}T${formData.scheduledTime || '10:00'}:00`).toISOString(),
       })
       setIsEditOpen(false)
@@ -291,11 +307,44 @@ export default function FollowUps() {
                         </Badge>
                       </div>
                       <p className="text-xs text-slate-500 mt-0.5">
-                        {f.lead?.mobileNumber ? `Phone: ${f.lead.mobileNumber} • ` : ''}Model: <span className="text-slate-700 font-medium">{f.lead?.tractorModel || 'Tractor Inquiry'}</span>
+                        {(f.lead?.primaryMobile || f.lead?.mobileNumber) ? `Phone: ${f.lead.primaryMobile || f.lead.mobileNumber} • ` : ''}Model: <span className="text-slate-700 font-medium">{f.lead?.tractorModelInterested || f.lead?.tractorModel || 'Tractor Inquiry'}</span>
                       </p>
+
+                      {/* Who is Following Up & Who Initiated */}
+                      <div className="flex flex-wrap items-center gap-1.5 mt-2 text-[11px]">
+                        <span className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-50 text-blue-800 font-medium border border-blue-100">
+                          <UserCheck className="w-3 h-3 text-blue-600" />
+                          <span>Following Up: <strong>{f.assignedTo?.fullName || 'Assigned Rep'}</strong></span>
+                        </span>
+
+                        <span className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-medium border border-slate-200">
+                          <Clock className="w-3 h-3 text-slate-500" />
+                          <span>Scheduled By: <strong>{f.createdBy?.fullName || 'Admin'}</strong></span>
+                        </span>
+
+                        {f.lead?.createdBy?.fullName && (
+                          <span className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 font-medium border border-emerald-100">
+                            <ShieldCheck className="w-3 h-3 text-emerald-600" />
+                            <span>Lead Initiator: <strong>{f.lead.createdBy.fullName}</strong></span>
+                          </span>
+                        )}
+
+                        {f.status === 'completed' && (
+                          <span className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-100/70 text-emerald-900 font-medium">
+                            <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                            <span>Completed by: <strong>{f.completedBy?.fullName || f.assignedTo?.fullName || 'Staff'}</strong></span>
+                          </span>
+                        )}
+                      </div>
+
                       {f.notes && (
-                        <p className="text-xs text-slate-600 mt-1 bg-slate-50 p-2 rounded-lg border border-slate-100 max-w-lg">
+                        <p className="text-xs text-slate-600 mt-2 bg-slate-50 p-2 rounded-lg border border-slate-100 max-w-xl">
                           "{f.notes}"
+                        </p>
+                      )}
+                      {f.completionNotes && (
+                        <p className="text-xs text-emerald-800 mt-1 bg-emerald-50/70 p-2 rounded-lg border border-emerald-100 max-w-xl">
+                          <span className="font-semibold">Outcome: </span>"{f.completionNotes}"
                         </p>
                       )}
                     </div>
@@ -392,15 +441,62 @@ export default function FollowUps() {
               label="Select Customer Lead"
               required
               value={formData.lead}
-              onChange={(e) => setFormData({ ...formData, lead: e.target.value })}
+              onChange={(e) => {
+                const selectedLeadId = e.target.value
+                const foundLead = leads.find((l) => l._id === selectedLeadId)
+                setFormData({
+                  ...formData,
+                  lead: selectedLeadId,
+                  assignedTo: foundLead?.assignedTo?._id || foundLead?.assignedTo || formData.assignedTo || currentUser?._id || '',
+                })
+              }}
               options={[
                 { value: '', label: '-- Choose Lead --' },
                 ...leads.map((l) => ({
                   value: l._id,
-                  label: `${l.customerName} (${l.primaryMobile || l.mobileNumber}) - ${l.interestedModel || l.tractorModel || 'Inquiry'}`,
+                  label: `${l.customerName} (${l.primaryMobile || l.mobileNumber || ''}) - ${l.tractorModelInterested || l.interestedModel || l.tractorModel || 'Inquiry'}`,
                 })),
               ]}
               placeholder="-- Choose Lead --"
+            />
+          </div>
+
+          <div>
+            <Select
+              label="Assigned Executive (Who is Following Up?)"
+              value={formData.assignedTo}
+              onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
+              options={[
+                ...(currentUser?._id
+                  ? [{ value: currentUser._id, label: `Assign to Myself (${currentUser.fullName})` }]
+                  : []),
+                ...users
+                  .filter((u) => u._id !== currentUser?._id)
+                  .map((u) => ({
+                    value: u._id,
+                    label: `${u.fullName} • ${u.role?.displayName || u.department || 'Sales'}${u.employeeId ? ` (${u.employeeId})` : ''}`,
+                  })),
+              ]}
+              helperText="Designate the representative responsible for reaching out to the customer."
+            />
+          </div>
+
+          <div>
+            <Select
+              label="Assigned Executive (Who is Following Up?)"
+              value={formData.assignedTo}
+              onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
+              options={[
+                ...(currentUser?._id
+                  ? [{ value: currentUser._id, label: `Assign to Myself (${currentUser.fullName})` }]
+                  : []),
+                ...users
+                  .filter((u) => u._id !== currentUser?._id)
+                  .map((u) => ({
+                    value: u._id,
+                    label: `${u.fullName} • ${u.role?.displayName || u.department || 'Sales'}${u.employeeId ? ` (${u.employeeId})` : ''}`,
+                  })),
+              ]}
             />
           </div>
 
@@ -474,6 +570,25 @@ export default function FollowUps() {
               <span>{formError}</span>
             </div>
           )}
+
+          <div>
+            <Select
+              label="Assigned Executive (Who is Following Up?)"
+              value={formData.assignedTo}
+              onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
+              options={[
+                ...(currentUser?._id
+                  ? [{ value: currentUser._id, label: `Assign to Myself (${currentUser.fullName})` }]
+                  : []),
+                ...users
+                  .filter((u) => u._id !== currentUser?._id)
+                  .map((u) => ({
+                    value: u._id,
+                    label: `${u.fullName} • ${u.role?.displayName || u.department || 'Sales'}${u.employeeId ? ` (${u.employeeId})` : ''}`,
+                  })),
+              ]}
+            />
+          </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>

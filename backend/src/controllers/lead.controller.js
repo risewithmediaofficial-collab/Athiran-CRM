@@ -17,8 +17,13 @@ const getLeadQueryScope = (user) => {
   if (userPerms.includes(PERMISSIONS.LEADS_VIEW_ALL)) {
     return {} // Admin / Super Admin can see all
   }
-  // Sales manager / executive / telecaller: only own assigned leads
-  return { assignedTo: user._id }
+  // Sales manager / executive / telecaller: only own assigned leads or leads created by them
+  return {
+    $or: [
+      { assignedTo: user._id },
+      { createdBy: user._id },
+    ],
+  }
 }
 
 export const getLeads = asyncHandler(async (req, res) => {
@@ -35,6 +40,9 @@ export const getLeads = asyncHandler(async (req, res) => {
   if (req.query.assignedTo && (req.user.role?.permissions || []).includes(PERMISSIONS.LEADS_VIEW_ALL)) {
     filter.assignedTo = req.query.assignedTo
   }
+  if (req.query.createdBy) {
+    filter.createdBy = req.query.createdBy
+  }
   if (req.query.search) {
     const s = req.query.search.trim()
     filter.$or = [
@@ -47,8 +55,8 @@ export const getLeads = asyncHandler(async (req, res) => {
 
   const [leads, total] = await Promise.all([
     Lead.find(filter)
-      .populate('assignedTo', 'fullName email mobile employeeId')
-      .populate('createdBy', 'fullName email employeeId')
+      .populate('assignedTo', 'fullName email mobile employeeId designation')
+      .populate('createdBy', 'fullName email employeeId designation')
       .sort(sort)
       .skip(skip)
       .limit(limit),
@@ -119,16 +127,16 @@ export const createLead = asyncHandler(async (req, res) => {
 export const getLeadById = asyncHandler(async (req, res) => {
   const lead = await Lead.findById(req.params.id)
     .populate('assignedTo', 'fullName email mobile employeeId department designation')
-    .populate('createdBy', 'fullName email employeeId')
+    .populate('createdBy', 'fullName email employeeId designation')
 
   if (!lead) throw ApiError.notFound('Lead')
 
   // Check IDOR / ownership
   const perms = req.user.role?.permissions || []
-  if (!perms.includes(PERMISSIONS.LEADS_VIEW_ALL)) {
-    if (String(lead.assignedTo?._id) !== String(req.user._id)) {
-      throw ApiError.forbidden('You do not have permission to view this lead.')
-    }
+  const isAssigned = String(lead.assignedTo?._id || lead.assignedTo) === String(req.user._id)
+  const isCreator = String(lead.createdBy?._id || lead.createdBy) === String(req.user._id)
+  if (!perms.includes(PERMISSIONS.LEADS_VIEW_ALL) && !isAssigned && !isCreator) {
+    throw ApiError.forbidden('You do not have permission to view this lead.')
   }
 
   return ApiResponse.ok(lead, 'Lead details retrieved').send(res)
@@ -140,18 +148,54 @@ export const updateLead = asyncHandler(async (req, res) => {
 
   const perms = req.user.role?.permissions || []
   const isOwner = String(lead.assignedTo) === String(req.user._id)
+  const isCreator = String(lead.createdBy) === String(req.user._id)
   const canEditAll = perms.includes(PERMISSIONS.LEADS_EDIT_ALL)
+  const canAssign = perms.includes(PERMISSIONS.LEADS_ASSIGN) || canEditAll
 
-  if (!isOwner && !canEditAll) {
+  if (!isOwner && !isCreator && !canEditAll) {
     throw ApiError.forbidden('You do not have permission to update this lead.')
   }
 
   const before = lead.toObject()
   const previousStatus = lead.status
+  const previousAssignee = lead.assignedTo
 
   // Prevent modifying leadId or createdBy
   delete req.body.leadId
   delete req.body.createdBy
+
+  // Handle assignment change if provided and authorized
+  const newAssignedTo = req.body.assignedTo
+  if (newAssignedTo && String(newAssignedTo) !== String(previousAssignee)) {
+    if (!canAssign) {
+      delete req.body.assignedTo
+    } else {
+      await LeadAssignment.updateMany({ lead: lead._id, isActive: true }, { isActive: false })
+      await LeadAssignment.create({
+        lead: lead._id,
+        assignedTo: newAssignedTo,
+        assignedBy: req.user._id,
+        previousAssignee,
+        reason: req.body.assignmentReason || 'Updated via lead profile edit',
+      })
+      await LeadActivity.create({
+        lead: lead._id,
+        activityType: 'assignment_change',
+        performedBy: req.user._id,
+        description: 'Lead assignment updated',
+      })
+      if (String(newAssignedTo) !== String(req.user._id)) {
+        await Notification.create({
+          recipient: newAssignedTo,
+          type: 'lead_assigned',
+          title: 'Lead Reassigned to You',
+          message: `Lead ${lead.customerName} (${lead.leadId}) has been assigned to you.`,
+          entityType: 'lead',
+          entityId: lead._id,
+        })
+      }
+    }
+  }
 
   Object.assign(lead, req.body)
   await lead.save()
@@ -178,8 +222,8 @@ export const updateLead = asyncHandler(async (req, res) => {
   })
 
   const updated = await Lead.findById(lead._id)
-    .populate('assignedTo', 'fullName email mobile')
-    .populate('createdBy', 'fullName email')
+    .populate('assignedTo', 'fullName email mobile employeeId designation')
+    .populate('createdBy', 'fullName email employeeId designation')
 
   return ApiResponse.ok(updated, 'Lead updated successfully').send(res)
 })
@@ -241,12 +285,14 @@ export const getLeadActivities = asyncHandler(async (req, res) => {
   if (!lead) throw ApiError.notFound('Lead')
 
   const perms = req.user.role?.permissions || []
-  if (!perms.includes(PERMISSIONS.LEADS_VIEW_ALL) && String(lead.assignedTo) !== String(req.user._id)) {
+  const isAssigned = String(lead.assignedTo) === String(req.user._id)
+  const isCreator = String(lead.createdBy) === String(req.user._id)
+  if (!perms.includes(PERMISSIONS.LEADS_VIEW_ALL) && !isAssigned && !isCreator) {
     throw ApiError.forbidden('You do not have permission to view activities for this lead.')
   }
 
   const activities = await LeadActivity.find({ lead: req.params.id })
-    .populate('performedBy', 'fullName designation profileImage')
+    .populate('performedBy', 'fullName designation employeeId profileImage')
     .sort({ date: -1 })
 
   return ApiResponse.ok(activities, 'Activities retrieved').send(res)
@@ -257,7 +303,9 @@ export const addLeadActivity = asyncHandler(async (req, res) => {
   if (!lead) throw ApiError.notFound('Lead')
 
   const perms = req.user.role?.permissions || []
-  if (!perms.includes(PERMISSIONS.LEADS_VIEW_ALL) && String(lead.assignedTo) !== String(req.user._id)) {
+  const isAssigned = String(lead.assignedTo) === String(req.user._id)
+  const isCreator = String(lead.createdBy) === String(req.user._id)
+  if (!perms.includes(PERMISSIONS.LEADS_VIEW_ALL) && !isAssigned && !isCreator) {
     throw ApiError.forbidden('You do not have permission to record activity on this lead.')
   }
 

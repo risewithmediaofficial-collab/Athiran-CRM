@@ -142,12 +142,39 @@ export default function MyLeads() {
       render: (val) => <Badge type="lead_status" value={val} />,
     },
     {
+      key: 'createdBy',
+      label: 'Initiated By',
+      render: (val) => (
+        <div>
+          <div className="font-semibold text-xs text-content-primary">
+            {val?.fullName || 'Admin'}
+          </div>
+          <div className="text-[11px] text-content-tertiary">
+            {val?.employeeId ? `ID: ${val.employeeId}` : (val?.email || 'Initiator')}
+          </div>
+        </div>
+      ),
+    },
+    {
       key: 'assignedTo',
       label: 'Assigned To',
       render: (val) => (
-        <span className="text-xs text-content-secondary">
-          {val?.fullName || 'Unassigned'}
-        </span>
+        <div>
+          {val?.fullName ? (
+            <div>
+              <div className="font-medium text-xs text-content-primary">
+                {val.fullName}
+              </div>
+              <div className="text-[11px] text-content-tertiary">
+                {val.designation || (val.employeeId ? `ID: ${val.employeeId}` : 'Sales Rep')}
+              </div>
+            </div>
+          ) : (
+            <span className="text-[11px] px-2 py-0.5 rounded-md font-medium bg-amber-50 text-amber-700 border border-amber-200">
+              Unassigned
+            </span>
+          )}
+        </div>
       ),
     },
     {

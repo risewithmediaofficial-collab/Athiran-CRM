@@ -11,6 +11,7 @@ const followUpSchema = new mongoose.Schema({
   expectedOutcome: String,
   status: { type: String, enum: ['pending', 'completed', 'missed', 'rescheduled', 'cancelled'], default: 'pending' },
   completedAt: Date,
+  completedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   completionNotes: String,
   rescheduledTo: { type: mongoose.Schema.Types.ObjectId, ref: 'FollowUp' },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
