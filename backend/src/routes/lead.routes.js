@@ -1,4 +1,5 @@
 import express from 'express'
+
 import {
   getLeads,
   createLead,
@@ -12,7 +13,7 @@ import {
   deleteLead,
 } from '../controllers/lead.controller.js'
 import { authenticate } from '../middleware/authenticate.js'
-import { authorize } from '../middleware/authorize.js'
+import { authorize, authorizeAny } from '../middleware/authorize.js'
 import { validate } from '../middleware/validate.js'
 import { body } from 'express-validator'
 import { PERMISSIONS } from '../constants/permissions.js'
@@ -45,7 +46,7 @@ router.delete('/:id', deleteLead)
 
 router.post(
   '/:id/assign',
-  authorize(PERMISSIONS.LEADS_ASSIGN),
+  authorizeAny(PERMISSIONS.LEADS_ASSIGN, PERMISSIONS.LEADS_REASSIGN, PERMISSIONS.LEADS_EDIT_ALL, PERMISSIONS.LEADS_VIEW_ALL),
   [body('newAssignedTo').notEmpty().withMessage('New assigned employee is required')],
   validate,
   assignLead
@@ -53,7 +54,7 @@ router.post(
 
 router.post(
   '/:id/reassign',
-  authorize(PERMISSIONS.LEADS_REASSIGN),
+  authorizeAny(PERMISSIONS.LEADS_ASSIGN, PERMISSIONS.LEADS_REASSIGN, PERMISSIONS.LEADS_EDIT_ALL, PERMISSIONS.LEADS_VIEW_ALL),
   [body('newAssignedTo').notEmpty().withMessage('New assigned employee is required')],
   validate,
   assignLead

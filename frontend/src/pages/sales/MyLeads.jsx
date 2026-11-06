@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import leadsApi from '../../api/leads'
+import usersApi from '../../api/users'
+import { useAuth } from '../../context/AuthContext'
 import Breadcrumb from '../../components/navigation/Breadcrumb'
 import Button from '../../components/ui/Button'
 import Badge from '../../components/ui/Badge'
@@ -15,11 +17,13 @@ import {
   Edit,
   Trash2,
   Phone,
+  Loader2,
 } from 'lucide-react'
 import { LEAD_STATUSES, LEAD_TEMPERATURES } from '../../constants'
 
 export default function MyLeads() {
   const navigate = useNavigate()
+  const { user: currentUser } = useAuth()
   const [searchParams] = useSearchParams()
   const initialSearch = searchParams.get('search') || ''
 
@@ -30,6 +34,18 @@ export default function MyLeads() {
   const [tempFilter, setTempFilter] = useState('')
   const [sortKey, setSortKey] = useState('createdAt')
   const [sortDir, setSortDir] = useState('desc')
+  const [users, setUsers] = useState([])
+  const [assigningId, setAssigningId] = useState(null)
+
+  useEffect(() => {
+    usersApi
+      .getUsers({ limit: 100, accountStatus: 'active' })
+      .then((res) => {
+        const uList = res.data?.data?.users || (Array.isArray(res.data?.data) ? res.data?.data : [])
+        setUsers(uList)
+      })
+      .catch((err) => console.error('Failed to load users for assignment', err))
+  }, [])
 
   // Debounce search input
   useEffect(() => {
@@ -65,6 +81,22 @@ export default function MyLeads() {
   }
 
   const queryClient = useQueryClient()
+
+  const handleInlineAssign = async (leadId, newUserId) => {
+    if (!newUserId) return
+    try {
+      setAssigningId(leadId)
+      await leadsApi.assignLead(leadId, {
+        newAssignedTo: newUserId,
+        reason: 'Assigned directly from leads table',
+      })
+      queryClient.invalidateQueries(['leads'])
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to reassign lead.')
+    } finally {
+      setAssigningId(null)
+    }
+  }
 
   const handleDeleteLead = async (e, id, name) => {
     e.stopPropagation()
@@ -158,24 +190,42 @@ export default function MyLeads() {
     {
       key: 'assignedTo',
       label: 'Assigned To',
-      render: (val) => (
-        <div>
-          {val?.fullName ? (
-            <div>
-              <div className="font-medium text-xs text-content-primary">
-                {val.fullName}
-              </div>
-              <div className="text-[11px] text-content-tertiary">
-                {val.designation || (val.employeeId ? `ID: ${val.employeeId}` : 'Sales Rep')}
-              </div>
+      width: '190px',
+      render: (val, row) => {
+        const currentAssigneeId = typeof val === 'object' && val !== null ? val._id : (val || '')
+        const isAssigning = assigningId === row._id
+
+        return (
+          <div onClick={(e) => e.stopPropagation()} className="min-w-[155px] max-w-[195px]">
+            <div className="relative">
+              <Select
+                size="sm"
+                disabled={isAssigning}
+                value={currentAssigneeId}
+                onChange={(e) => handleInlineAssign(row._id, e.target.value)}
+                options={[
+                  ...(currentAssigneeId ? [] : [{ value: '', label: '-- Unassigned --' }]),
+                  ...users.map((u) => ({
+                    value: u._id,
+                    label: u.fullName + (u._id === currentUser?._id ? ' (You)' : ''),
+                  })),
+                ]}
+                triggerClassName="text-xs font-semibold h-8 py-0.5 px-2.5 rounded-lg border-slate-200 bg-white hover:border-primary-400 focus:border-primary-500 shadow-2xs text-slate-800"
+              />
+              {isAssigning && (
+                <div className="absolute right-7 top-1/2 -translate-y-1/2 pointer-events-none">
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
+                </div>
+              )}
             </div>
-          ) : (
-            <span className="text-[11px] px-2 py-0.5 rounded-md font-medium bg-amber-50 text-amber-700 border border-amber-200">
-              Unassigned
-            </span>
-          )}
-        </div>
-      ),
+            {val?.designation && (
+              <div className="text-[10px] text-content-tertiary mt-0.5 truncate pl-1">
+                {val.designation} {val.employeeId ? `• ${val.employeeId}` : ''}
+              </div>
+            )}
+          </div>
+        )
+      },
     },
     {
       key: 'actions',

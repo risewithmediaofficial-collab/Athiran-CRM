@@ -104,7 +104,7 @@ export default function DataTable({
                 <td
                   key={col.key}
                   onClick={(e) => {
-                    if (col.key === 'actions') {
+                    if (col.key === 'actions' || col.key === 'assignedTo') {
                       e.stopPropagation()
                     }
                   }}

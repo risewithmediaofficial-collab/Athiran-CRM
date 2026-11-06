@@ -29,6 +29,7 @@ export default function LeadManagement() {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [userFilter, setUserFilter] = useState('')
+  const [assigningId, setAssigningId] = useState(null)
 
   // Modals
   const [isReassignOpen, setIsReassignOpen] = useState(false)
@@ -70,6 +71,22 @@ export default function LeadManagement() {
     setNewAssignee(users[0]?._id || '')
     setErrorMsg('')
     setIsReassignOpen(true)
+  }
+
+  const handleInlineAssign = async (leadId, newUserId) => {
+    if (!newUserId) return
+    try {
+      setAssigningId(leadId)
+      await leadsApi.assignLead(leadId, {
+        newAssignedTo: newUserId,
+        reason: 'Assigned directly from admin lead table',
+      })
+      fetchLeadsAndUsers()
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to reassign lead.')
+    } finally {
+      setAssigningId(null)
+    }
   }
 
   const handleOpenDelete = (lead) => {
@@ -233,15 +250,28 @@ export default function LeadManagement() {
                         {l.createdBy?.employeeId ? `ID: ${l.createdBy.employeeId}` : (l.createdBy?.email || 'Initiator')}
                       </div>
                     </td>
-                    <td className="py-4 px-6 text-xs text-slate-600">
-                      {l.assignedTo?.fullName ? (
-                        <div>
-                          <span className="font-semibold text-slate-800 block">{l.assignedTo.fullName}</span>
-                          <span className="text-[11px] text-slate-400 block">{l.assignedTo.designation || 'Sales'}</span>
-                        </div>
-                      ) : (
-                        <span className="text-amber-600 font-medium bg-amber-50 px-2 py-0.5 rounded-md">Unassigned</span>
-                      )}
+                    <td className="py-4 px-6 text-xs text-slate-600" onClick={(e) => e.stopPropagation()}>
+                      <div className="min-w-[150px] max-w-[190px]">
+                        <Select
+                          size="sm"
+                          disabled={assigningId === l._id}
+                          value={l.assignedTo?._id || l.assignedTo || ''}
+                          onChange={(e) => handleInlineAssign(l._id, e.target.value)}
+                          options={[
+                            ...(l.assignedTo?._id ? [] : [{ value: '', label: '-- Unassigned --' }]),
+                            ...users.map((u) => ({
+                              value: u._id,
+                              label: u.fullName,
+                            })),
+                          ]}
+                          triggerClassName="text-xs font-semibold h-8 py-0.5 px-2.5 rounded-lg border-slate-200 bg-white hover:border-primary-400 focus:border-primary-500 shadow-2xs text-slate-800"
+                        />
+                        {l.assignedTo?.designation && (
+                          <div className="text-[10px] text-slate-400 mt-0.5 truncate pl-1">
+                            {l.assignedTo.designation} {l.assignedTo.employeeId ? `• ${l.assignedTo.employeeId}` : ''}
+                          </div>
+                        )}
+                      </div>
                     </td>
                     <td className="py-4 px-6">
                       <Badge variant="neutral">
