@@ -24,6 +24,7 @@ export const getCustomers = asyncHandler(async (req, res) => {
 
   const [customers, total] = await Promise.all([
     Customer.find(filter)
+      .populate('linkedLeadId', 'leadId customerName status tractorModelInterested primaryMobile')
       .sort(sort)
       .skip(skip)
       .limit(limit)
@@ -61,6 +62,7 @@ export const createCustomer = asyncHandler(async (req, res) => {
   const pinCode = req.body.pinCode || req.body.pincode || req.body.address?.pincode || ''
   const notes = req.body.notes || ''
   const customerType = req.body.customerType || 'farmer'
+  const linkedLeadId = req.body.linkedLeadId || undefined
 
   const customer = await Customer.create({
     customerName,
@@ -73,6 +75,7 @@ export const createCustomer = asyncHandler(async (req, res) => {
     pinCode,
     notes,
     customerType,
+    linkedLeadId,
     customerId: generateId(PREFIXES.CUSTOMER),
     createdBy: req.user._id,
   })
@@ -95,6 +98,7 @@ export const createCustomer = asyncHandler(async (req, res) => {
 
 export const getCustomerById = asyncHandler(async (req, res) => {
   const customer = await Customer.findById(req.params.id)
+    .populate('linkedLeadId', 'leadId customerName status tractorModelInterested primaryMobile email village')
   if (!customer) throw ApiError.notFound('Customer')
 
   const tractors = await Tractor.find({ customer: customer._id }).sort({ createdAt: -1 })
@@ -130,6 +134,7 @@ export const updateCustomer = asyncHandler(async (req, res) => {
   if (req.body.address?.pincode !== undefined) customer.pinCode = req.body.address.pincode
   if (req.body.notes !== undefined) customer.notes = req.body.notes
   if (req.body.customerType) customer.customerType = req.body.customerType
+  if (req.body.linkedLeadId !== undefined) customer.linkedLeadId = req.body.linkedLeadId || undefined
 
   await customer.save()
 

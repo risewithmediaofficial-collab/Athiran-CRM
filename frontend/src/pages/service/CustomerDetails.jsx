@@ -304,6 +304,21 @@ export default function CustomerDetails() {
               <p className="text-xs text-slate-700 mt-1 leading-relaxed">{customer.notes}</p>
             </div>
           )}
+          {customer.linkedLeadId && (
+            <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+              <div>
+                <span className="text-xs font-semibold text-slate-500">Converted From Lead:</span>
+                <div className="text-xs font-bold text-primary-600 mt-0.5">
+                  {customer.linkedLeadId?.leadId || 'View Lead'}
+                </div>
+              </div>
+              <Link to={`/leads/${customer.linkedLeadId?._id || customer.linkedLeadId}`}>
+                <button className="text-xs text-primary-600 font-semibold hover:underline cursor-pointer">
+                  View Lead Details →
+                </button>
+              </Link>
+            </div>
+          )}
         </div>
 
         {/* Fleet Summary Card */}
