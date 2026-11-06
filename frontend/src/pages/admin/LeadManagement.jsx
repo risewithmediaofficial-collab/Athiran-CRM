@@ -214,13 +214,13 @@ export default function LeadManagement() {
             <table className="w-full text-left text-sm">
               <thead className="bg-slate-50/80 border-b border-slate-200/80 text-xs font-semibold text-slate-500 uppercase tracking-wider">
                 <tr>
-                  <th className="py-3.5 px-6">Customer / Inquiry</th>
-                  <th className="py-3.5 px-6">Tractor Model</th>
-                  <th className="py-3.5 px-6">Initiated By</th>
-                  <th className="py-3.5 px-6">Assigned Executive</th>
-                  <th className="py-3.5 px-6">Status</th>
-                  <th className="py-3.5 px-6">Lead Source</th>
-                  <th className="py-3.5 px-6 text-right">Actions</th>
+                  <th className="py-3.5 px-6 whitespace-nowrap align-middle">Customer / Inquiry</th>
+                  <th className="py-3.5 px-6 whitespace-nowrap align-middle">Tractor Model</th>
+                  <th className="py-3.5 px-6 whitespace-nowrap align-middle">Initiated By</th>
+                  <th className="py-3.5 px-6 whitespace-nowrap align-middle">Assigned Executive</th>
+                  <th className="py-3.5 px-6 whitespace-nowrap align-middle text-center">Status</th>
+                  <th className="py-3.5 px-6 whitespace-nowrap align-middle">Lead Source</th>
+                  <th className="py-3.5 px-6 whitespace-nowrap align-middle text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -231,27 +231,27 @@ export default function LeadManagement() {
                     className="hover:bg-primary-50/40 cursor-pointer transition-colors group"
                     title="Click anywhere on this row to open lead details"
                   >
-                    <td className="py-4 px-6 font-semibold text-slate-900">
+                    <td className="py-4 px-6 align-middle font-semibold text-slate-900">
                       <div className="group-hover:text-primary-600 transition-colors">
                         {l.customerName}
                       </div>
-                      <div className="text-xs text-slate-400 font-normal">
+                      <div className="text-xs text-slate-400 font-normal whitespace-nowrap mt-0.5">
                         {l.primaryMobile || l.mobileNumber} • {l.village || 'Tamil Nadu'}
                       </div>
                     </td>
-                    <td className="py-4 px-6 text-xs text-slate-800 font-medium">
+                    <td className="py-4 px-6 align-middle text-xs text-slate-800 font-medium whitespace-nowrap">
                       {l.tractorModelInterested || l.interestedModel || l.tractorModel || 'General Inquiry'}
                     </td>
-                    <td className="py-4 px-6 text-xs text-slate-700">
+                    <td className="py-4 px-6 align-middle text-xs text-slate-700 whitespace-nowrap">
                       <div className="font-semibold text-slate-900">
                         {l.createdBy?.fullName || 'Admin'}
                       </div>
-                      <div className="text-[11px] text-slate-400">
+                      <div className="text-[11px] text-slate-400 font-mono whitespace-nowrap">
                         {l.createdBy?.employeeId ? `ID: ${l.createdBy.employeeId}` : (l.createdBy?.email || 'Initiator')}
                       </div>
                     </td>
-                    <td className="py-4 px-6 text-xs text-slate-600" onClick={(e) => e.stopPropagation()}>
-                      <div className="min-w-[150px] max-w-[190px]">
+                    <td className="py-4 px-6 align-middle text-xs text-slate-600" onClick={(e) => e.stopPropagation()}>
+                      <div className="w-[190px]">
                         <Select
                           size="sm"
                           disabled={assigningId === l._id}
@@ -267,21 +267,21 @@ export default function LeadManagement() {
                           triggerClassName="text-xs font-semibold h-8 py-0.5 px-2.5 rounded-lg border-slate-200 bg-white hover:border-primary-400 focus:border-primary-500 shadow-2xs text-slate-800"
                         />
                         {l.assignedTo?.designation && (
-                          <div className="text-[10px] text-slate-400 mt-0.5 truncate pl-1">
+                          <div className="text-[10px] text-slate-400 mt-0.5 truncate pl-1 max-w-[190px]">
                             {l.assignedTo.designation} {l.assignedTo.employeeId ? `• ${l.assignedTo.employeeId}` : ''}
                           </div>
                         )}
                       </div>
                     </td>
-                    <td className="py-4 px-6">
+                    <td className="py-4 px-6 align-middle text-center whitespace-nowrap">
                       <Badge variant="neutral">
                         {l.status?.replace('_', ' ')}
                       </Badge>
                     </td>
-                    <td className="py-4 px-6 text-xs text-slate-500">
+                    <td className="py-4 px-6 align-middle text-xs text-slate-500 whitespace-nowrap">
                       {l.leadSource || 'Direct'}
                     </td>
-                    <td className="py-4 px-6 text-right" onClick={(e) => e.stopPropagation()}>
+                    <td className="py-4 px-6 align-middle text-right" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-end gap-1.5">
                         <button
                           title="View Lead Details"

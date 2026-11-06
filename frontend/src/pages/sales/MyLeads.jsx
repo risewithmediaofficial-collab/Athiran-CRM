@@ -113,22 +113,23 @@ export default function MyLeads() {
     {
       key: 'leadId',
       label: 'Lead ID',
-      width: '130px',
+      width: '155px',
+      minWidth: '150px',
       render: (val, row) => (
-        <div>
+        <div className="whitespace-nowrap">
           <Link
             to={`/leads/${row._id}`}
-            className="font-mono text-xs font-semibold text-primary hover:underline"
+            className="font-mono text-xs font-bold text-primary hover:underline block"
           >
             {val}
           </Link>
-          <div className="text-[11px] text-content-tertiary mt-0.5">
+          <span className="text-[11px] text-content-tertiary">
             {new Date(row.leadDate || row.createdAt).toLocaleDateString('en-IN', {
               day: '2-digit',
               month: 'short',
               year: 'numeric',
             })}
-          </div>
+          </span>
         </div>
       ),
     },
@@ -136,13 +137,16 @@ export default function MyLeads() {
       key: 'customerName',
       label: 'Customer Name',
       sortable: true,
+      minWidth: '180px',
       render: (val, row) => (
         <div>
-          <div className="font-semibold text-content-primary">{val}</div>
-          <div className="text-xs text-content-tertiary flex items-center gap-1 mt-0.5">
-            <Phone className="w-3 h-3" />
+          <div className="font-semibold text-xs text-content-primary truncate max-w-[200px]" title={val}>
+            {val}
+          </div>
+          <div className="text-[11px] text-content-tertiary flex items-center gap-1 mt-0.5 whitespace-nowrap">
+            <Phone className="w-3 h-3 shrink-0" />
             <span>{row.primaryMobile}</span>
-            {row.village && <span>• {row.village}</span>}
+            {row.village && <span className="truncate max-w-[120px]">• {row.village}</span>}
           </div>
         </div>
       ),
@@ -150,38 +154,47 @@ export default function MyLeads() {
     {
       key: 'tractorModelInterested',
       label: 'Model Requirement',
+      minWidth: '200px',
       render: (val, row) => (
         <div>
-          <span className="font-medium text-xs text-content-primary">
+          <span className="font-medium text-xs text-content-primary whitespace-nowrap block">
             {val || 'General Enquiry'}
           </span>
-          {row.estimatedBudget && (
-            <div className="text-[11px] text-content-secondary mt-0.5">
+          {row.estimatedBudget ? (
+            <div className="text-[11px] text-content-secondary mt-0.5 whitespace-nowrap font-mono">
               Budget: ₹{(row.estimatedBudget).toLocaleString('en-IN')}
             </div>
-          )}
+          ) : null}
         </div>
       ),
     },
     {
       key: 'leadTemperature',
       label: 'Temperature',
+      width: '120px',
+      minWidth: '110px',
+      align: 'center',
       render: (val) => <Badge type="lead_temperature" value={val} />,
     },
     {
       key: 'status',
       label: 'Status',
+      width: '110px',
+      minWidth: '100px',
+      align: 'center',
       render: (val) => <Badge type="lead_status" value={val} />,
     },
     {
       key: 'createdBy',
       label: 'Initiated By',
+      width: '160px',
+      minWidth: '150px',
       render: (val) => (
-        <div>
+        <div className="whitespace-nowrap">
           <div className="font-semibold text-xs text-content-primary">
             {val?.fullName || 'Admin'}
           </div>
-          <div className="text-[11px] text-content-tertiary">
+          <div className="text-[11px] text-content-tertiary font-mono whitespace-nowrap">
             {val?.employeeId ? `ID: ${val.employeeId}` : (val?.email || 'Initiator')}
           </div>
         </div>
@@ -190,13 +203,14 @@ export default function MyLeads() {
     {
       key: 'assignedTo',
       label: 'Assigned To',
-      width: '190px',
+      width: '210px',
+      minWidth: '200px',
       render: (val, row) => {
         const currentAssigneeId = typeof val === 'object' && val !== null ? val._id : (val || '')
         const isAssigning = assigningId === row._id
 
         return (
-          <div onClick={(e) => e.stopPropagation()} className="min-w-[155px] max-w-[195px]">
+          <div onClick={(e) => e.stopPropagation()} className="w-[195px]">
             <div className="relative">
               <Select
                 size="sm"
@@ -219,7 +233,10 @@ export default function MyLeads() {
               )}
             </div>
             {val?.designation && (
-              <div className="text-[10px] text-content-tertiary mt-0.5 truncate pl-1">
+              <div
+                className="text-[10px] text-content-tertiary mt-0.5 truncate pl-1 max-w-[195px]"
+                title={`${val.designation} • ${val.employeeId || ''}`}
+              >
                 {val.designation} {val.employeeId ? `• ${val.employeeId}` : ''}
               </div>
             )}
@@ -230,26 +247,28 @@ export default function MyLeads() {
     {
       key: 'actions',
       label: 'Actions',
-      width: '110px',
+      width: '100px',
+      minWidth: '90px',
+      align: 'right',
       render: (_, row) => (
-        <div className="flex items-center gap-1">
+        <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
           <Link
             to={`/leads/${row._id}`}
-            className="p-1 text-content-tertiary hover:text-primary rounded-md hover:bg-surface-raised transition-colors"
+            className="p-1.5 text-content-tertiary hover:text-primary rounded-lg hover:bg-surface-raised transition-colors"
             title="View Details"
           >
             <Eye className="w-3.5 h-3.5" />
           </Link>
           <Link
             to={`/leads/${row._id}/edit`}
-            className="p-1 text-content-tertiary hover:text-primary rounded-md hover:bg-surface-raised transition-colors"
+            className="p-1.5 text-content-tertiary hover:text-primary rounded-lg hover:bg-surface-raised transition-colors"
             title="Edit Lead"
           >
             <Edit className="w-3.5 h-3.5" />
           </Link>
           <button
             onClick={(e) => handleDeleteLead(e, row._id, row.customerName)}
-            className="p-1 text-content-tertiary hover:text-status-danger rounded-md hover:bg-status-danger-bg transition-colors"
+            className="p-1.5 text-content-tertiary hover:text-status-danger rounded-lg hover:bg-status-danger-bg transition-colors cursor-pointer"
             title="Delete Lead"
           >
             <Trash2 className="w-3.5 h-3.5" />

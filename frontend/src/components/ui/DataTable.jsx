@@ -64,14 +64,19 @@ export default function DataTable({
           <tr>
             {columns.map((col) => {
               const isSorted = sortKey === col.key
+              const alignClass = col.align === 'center' ? 'text-center' : col.align === 'right' ? 'text-right' : 'text-left'
+              const justifyClass = col.align === 'center' ? 'justify-center' : col.align === 'right' ? 'justify-end' : 'justify-start'
               return (
                 <th
                   key={col.key}
-                  style={col.width ? { width: col.width } : {}}
+                  style={{
+                    ...(col.width ? { width: col.width, minWidth: col.width } : {}),
+                    ...(col.minWidth ? { minWidth: col.minWidth } : {}),
+                  }}
                   onClick={() => handleSort(col.key, col.sortable)}
-                  className={col.sortable ? 'cursor-pointer select-none hover:bg-surface-inset' : ''}
+                  className={`align-middle whitespace-nowrap ${col.sortable ? 'cursor-pointer select-none hover:bg-surface-inset' : ''} ${alignClass} ${col.headerClassName || ''}`}
                 >
-                  <div className="flex items-center gap-1.5">
+                  <div className={`flex items-center gap-1.5 ${justifyClass}`}>
                     <span>{col.label}</span>
                     {col.sortable && (
                       <span className="text-content-tertiary">
@@ -100,18 +105,26 @@ export default function DataTable({
               className={onRowClick ? 'cursor-pointer hover:bg-primary-50/30 transition-colors group' : ''}
               title={onRowClick ? 'Click anywhere on this row to open details' : ''}
             >
-              {columns.map((col) => (
-                <td
-                  key={col.key}
-                  onClick={(e) => {
-                    if (col.key === 'actions' || col.key === 'assignedTo') {
-                      e.stopPropagation()
-                    }
-                  }}
-                >
-                  {col.render ? col.render(row[col.key], row) : row[col.key] || '—'}
-                </td>
-              ))}
+              {columns.map((col) => {
+                const alignClass = col.align === 'center' ? 'text-center' : col.align === 'right' ? 'text-right' : 'text-left'
+                return (
+                  <td
+                    key={col.key}
+                    style={{
+                      ...(col.width ? { width: col.width, minWidth: col.width } : {}),
+                      ...(col.minWidth ? { minWidth: col.minWidth } : {}),
+                    }}
+                    className={`align-middle ${alignClass} ${col.cellClassName || ''}`}
+                    onClick={(e) => {
+                      if (col.key === 'actions' || col.key === 'assignedTo') {
+                        e.stopPropagation()
+                      }
+                    }}
+                  >
+                    {col.render ? col.render(row[col.key], row) : row[col.key] || '—'}
+                  </td>
+                )
+              })}
             </tr>
           ))}
         </tbody>

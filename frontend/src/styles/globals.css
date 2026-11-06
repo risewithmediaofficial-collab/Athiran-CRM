@@ -76,10 +76,10 @@
   .skeleton { @apply animate-skeleton bg-surface-raised rounded; }
   .page-header { @apply flex items-center justify-between mb-6; }
   .page-title { @apply text-2xl font-semibold text-content-primary; }
-  .table-container { @apply w-full overflow-x-auto rounded-lg border border-border custom-scrollbar; }
-  .table { @apply w-full text-sm; }
-  .table th { @apply px-4 py-3 text-left text-xs font-semibold text-content-secondary uppercase tracking-wide bg-surface-raised border-b border-border; }
-  .table td { @apply px-4 py-3 text-content-primary border-b border-border-subtle; }
+  .table-container { @apply w-full overflow-x-auto rounded-xl border border-border shadow-xs bg-white custom-scrollbar; }
+  .table { @apply w-full text-sm border-collapse; }
+  .table th { @apply px-4 py-3.5 text-left text-xs font-semibold text-content-secondary uppercase tracking-wider bg-surface-raised border-b border-border align-middle whitespace-nowrap; }
+  .table td { @apply px-4 py-3.5 text-content-primary border-b border-border-subtle align-middle; }
   .table tr:last-child td { @apply border-b-0; }
   .table tr:hover td { @apply bg-surface-inset; }
 }
