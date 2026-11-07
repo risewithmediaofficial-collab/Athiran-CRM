@@ -19,6 +19,7 @@ import Select from '../../components/ui/Select'
 import Modal from '../../components/ui/Modal'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import EmptyState from '../../components/ui/EmptyState'
+import useDebounce from '../../hooks/useDebounce'
 import { TRACTOR_MODELS } from '../../constants'
 
 export default function TractorManagement() {
@@ -27,6 +28,7 @@ export default function TractorManagement() {
   const [customers, setCustomers] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
+  const debouncedSearch = useDebounce(search, 350)
 
   // Modals
   const [isAddOpen, setIsAddOpen] = useState(false)
@@ -55,17 +57,27 @@ export default function TractorManagement() {
     notes: '',
   })
 
+  // Load customer dropdown references once on mount
+  useEffect(() => {
+    let isMounted = true
+    serviceApi.getCustomers({ limit: 100 })
+      .then((res) => {
+        if (!isMounted) return
+        const cData = res.data?.data
+        setCustomers(Array.isArray(cData) ? cData : cData?.customers || [])
+      })
+      .catch((err) => console.error('Failed to load customers for tractor dropdown:', err))
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
   const fetchTractors = async () => {
     try {
       setLoading(true)
-      const [tractorsRes, custRes] = await Promise.all([
-        serviceApi.getTractors({ search }),
-        serviceApi.getCustomers({ limit: 100 }),
-      ])
+      const tractorsRes = await serviceApi.getTractors({ search: debouncedSearch })
       const tData = tractorsRes.data?.data
       setTractors(Array.isArray(tData) ? tData : tData?.tractors || [])
-      const cData = custRes.data?.data
-      setCustomers(Array.isArray(cData) ? cData : cData?.customers || [])
     } catch (err) {
       console.error('Failed to load tractor fleet:', err)
     } finally {
@@ -75,7 +87,7 @@ export default function TractorManagement() {
 
   useEffect(() => {
     fetchTractors()
-  }, [search])
+  }, [debouncedSearch])
 
   const handleOpenAdd = () => {
     setFormData({

@@ -18,6 +18,12 @@ const missedFollowupJob = () => {
 }
 
 export const initJobs = () => {
+  // In PM2 cluster mode, only run cron jobs on instance 0 to prevent duplicate job execution
+  if (process.env.NODE_APP_INSTANCE !== undefined && process.env.NODE_APP_INSTANCE !== '0') {
+    logger.info(`Background jobs skipped on PM2 cluster worker ${process.env.NODE_APP_INSTANCE}`)
+    return
+  }
+
   // Every 30 min — follow-up reminders
   cron.schedule('*/30 * * * *', followupReminderJob, { timezone: 'Asia/Kolkata' })
   // Every hour — service reminders

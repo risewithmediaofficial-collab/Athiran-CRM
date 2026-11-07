@@ -4,6 +4,7 @@ import cors from 'cors'
 import helmet from 'helmet'
 import morgan from 'morgan'
 import cookieParser from 'cookie-parser'
+import compression from 'compression'
 import { corsOptions } from './config/cors.js'
 import { generalLimiter } from './middleware/rateLimiter.js'
 import { errorHandler, notFound } from './middleware/errorHandler.js'
@@ -33,6 +34,12 @@ app.use(helmet({
 }))
 app.use(cors(corsOptions))
 
+// ── Compression (Gzip / Deflate for all API responses > 1KB) ──────────────────
+app.use(compression({
+  threshold: 1024,
+  level: 6,
+}))
+
 // ── Trust proxy (for rate-limiter, behind nginx/load balancer) ────────────────
 app.set('trust proxy', 1)
 
@@ -44,7 +51,7 @@ app.use(cookieParser())
 // ── Logging ───────────────────────────────────────────────────────────────────
 app.use(morgan('combined', {
   stream: { write: (msg) => logger.info(msg.trim()) },
-  skip: (req) => req.url === '/api/v1/health',
+  skip: (req) => req.url === '/api/v1/health' || req.url.startsWith('/uploads'),
 }))
 
 // ── Rate limiting ─────────────────────────────────────────────────────────────
@@ -71,8 +78,12 @@ app.use(`${BASE}/reports`, reportRoutes)
 app.use(`${BASE}/notifications`, notificationRoutes)
 app.use(`${BASE}/settings`, settingsRoutes)
 
-// ── Serve uploaded files (private — only via authenticated routes in production) ─
-app.use('/uploads', express.static('uploads'))
+// ── Serve uploaded files (with caching headers) ──────────────────────────────
+app.use('/uploads', express.static('uploads', {
+  maxAge: '7d',
+  etag: true,
+  immutable: false,
+}))
 
 // ── 404 & Error handler ───────────────────────────────────────────────────────
 app.use(notFound)

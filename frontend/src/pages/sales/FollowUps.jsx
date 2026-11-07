@@ -23,6 +23,7 @@ import { followupsApi } from '../../api/followups'
 import { leadsApi } from '../../api/leads'
 import usersApi from '../../api/users'
 import { useAuth } from '../../context/AuthContext'
+import useDebounce from '../../hooks/useDebounce'
 import Button from '../../components/ui/Button'
 import Badge from '../../components/ui/Badge'
 import Modal from '../../components/ui/Modal'
@@ -63,20 +64,38 @@ export default function FollowUps() {
   // Complete Form
   const [completeNotes, setCompleteNotes] = useState('')
 
+  const debouncedSearch = useDebounce(search, 350)
+
+  // Load dropdown reference data once on mount
+  useEffect(() => {
+    let isMounted = true
+    const loadDropdownData = async () => {
+      try {
+        const [lRes, uRes] = await Promise.all([
+          leadsApi.getLeads({ limit: 100 }),
+          usersApi.getUsers({ limit: 100, accountStatus: 'active' }).catch(() => ({ data: { data: [] } })),
+        ])
+        if (!isMounted) return
+        const lData = lRes.data?.data
+        setLeads(Array.isArray(lData) ? lData : lData?.leads || [])
+        const uData = uRes.data?.data
+        setUsers(Array.isArray(uData) ? uData : uData?.users || [])
+      } catch (err) {
+        console.error('Failed to load follow-up dropdown references:', err)
+      }
+    }
+    loadDropdownData()
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
   const fetchFollowups = async () => {
     try {
       setLoading(true)
-      const [fRes, lRes, uRes] = await Promise.all([
-        followupsApi.getFollowUps({ search, tab }),
-        leadsApi.getLeads({ limit: 100 }),
-        usersApi.getUsers({ limit: 100, accountStatus: 'active' }).catch(() => ({ data: { data: [] } })),
-      ])
+      const fRes = await followupsApi.getFollowUps({ search: debouncedSearch, tab })
       const fData = fRes.data?.data
       setFollowups(Array.isArray(fData) ? fData : fData?.followUps || [])
-      const lData = lRes.data?.data
-      setLeads(Array.isArray(lData) ? lData : lData?.leads || [])
-      const uData = uRes.data?.data
-      setUsers(Array.isArray(uData) ? uData : uData?.users || [])
     } catch (err) {
       console.error('Failed to load follow-ups:', err)
     } finally {
@@ -86,7 +105,7 @@ export default function FollowUps() {
 
   useEffect(() => {
     fetchFollowups()
-  }, [search, tab])
+  }, [debouncedSearch, tab])
 
   const handleOpenSchedule = () => {
     const firstLead = leads[0]

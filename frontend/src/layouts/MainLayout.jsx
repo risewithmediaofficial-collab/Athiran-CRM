@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import {
@@ -40,53 +40,56 @@ export default function MainLayout() {
   }
 
   // Navigation schema with permissions
-  const navGroups = [
-    {
-      title: 'Main',
-      items: [
-        { label: 'Overview', path: '/dashboard', icon: LayoutDashboard },
-      ],
-    },
-    {
-      title: 'Sales CRM',
-      items: [
-        { label: 'Sales Dashboard', path: '/sales', icon: BarChart3, permission: PERMISSIONS.LEADS_VIEW_OWN },
-        { label: 'Leads Pipeline', path: '/sales/pipeline', icon: Users, permission: PERMISSIONS.LEADS_VIEW_OWN },
-        { label: 'All Leads', path: '/leads', icon: Users, permission: PERMISSIONS.LEADS_VIEW_OWN },
-        { label: 'Follow-ups', path: '/follow-ups', icon: Calendar, permission: PERMISSIONS.LEADS_VIEW_OWN },
-      ],
-    },
-    {
-      title: 'Service CRM',
-      items: [
-        { label: 'Service Dashboard', path: '/service', icon: LayoutDashboard, permission: PERMISSIONS.SERVICE_VIEW_OWN },
-        { label: 'Customers', path: '/service/customers', icon: Users, permission: PERMISSIONS.CUSTOMERS_VIEW_ALL },
-        { label: 'Tractor Fleet', path: '/service/tractors', icon: Tractor, permission: PERMISSIONS.TRACTORS_VIEW_ALL },
-        { label: 'Service Records', path: '/service/records', icon: Wrench, permission: PERMISSIONS.SERVICE_VIEW_OWN },
-        { label: 'Service Calendar', path: '/service/calendar', icon: CalendarDays, permission: PERMISSIONS.SERVICE_VIEW_OWN },
-      ],
-    },
-    {
-      title: 'HR & Operations',
-      items: [
-        { label: 'Employees', path: '/employees', icon: UserCheck, permission: PERMISSIONS.EMPLOYEES_VIEW_ALL },
-        { label: 'Leave Management', path: '/leave', icon: FileText, permission: PERMISSIONS.LEAVE_APPLY },
-        { label: 'Reports & Analytics', path: '/reports', icon: BarChart3, permission: PERMISSIONS.REPORTS_SALES },
-      ],
-    },
-  ]
+  const navGroups = useMemo(() => {
+    const groups = [
+      {
+        title: 'Main',
+        items: [
+          { label: 'Overview', path: '/dashboard', icon: LayoutDashboard },
+        ],
+      },
+      {
+        title: 'Sales CRM',
+        items: [
+          { label: 'Sales Dashboard', path: '/sales', icon: BarChart3, permission: PERMISSIONS.LEADS_VIEW_OWN },
+          { label: 'Leads Pipeline', path: '/sales/pipeline', icon: Users, permission: PERMISSIONS.LEADS_VIEW_OWN },
+          { label: 'All Leads', path: '/leads', icon: Users, permission: PERMISSIONS.LEADS_VIEW_OWN },
+          { label: 'Follow-ups', path: '/follow-ups', icon: Calendar, permission: PERMISSIONS.LEADS_VIEW_OWN },
+        ],
+      },
+      {
+        title: 'Service CRM',
+        items: [
+          { label: 'Service Dashboard', path: '/service', icon: LayoutDashboard, permission: PERMISSIONS.SERVICE_VIEW_OWN },
+          { label: 'Customers', path: '/service/customers', icon: Users, permission: PERMISSIONS.CUSTOMERS_VIEW_ALL },
+          { label: 'Tractor Fleet', path: '/service/tractors', icon: Tractor, permission: PERMISSIONS.TRACTORS_VIEW_ALL },
+          { label: 'Service Records', path: '/service/records', icon: Wrench, permission: PERMISSIONS.SERVICE_VIEW_OWN },
+          { label: 'Service Calendar', path: '/service/calendar', icon: CalendarDays, permission: PERMISSIONS.SERVICE_VIEW_OWN },
+        ],
+      },
+      {
+        title: 'HR & Operations',
+        items: [
+          { label: 'Employees', path: '/employees', icon: UserCheck, permission: PERMISSIONS.EMPLOYEES_VIEW_ALL },
+          { label: 'Leave Management', path: '/leave', icon: FileText, permission: PERMISSIONS.LEAVE_APPLY },
+          { label: 'Reports & Analytics', path: '/reports', icon: BarChart3, permission: PERMISSIONS.REPORTS_SALES },
+        ],
+      },
+    ]
 
-  // Add Admin specific section if admin
-  if (isAdmin()) {
-    navGroups.push({
-      title: 'Administration',
-      items: [
-        { label: 'Users & Roles', path: '/admin/users', icon: Shield },
-        { label: 'Lead Handover', path: '/admin/leave', icon: FileText },
-        { label: 'System Settings', path: '/admin/settings', icon: Settings },
-      ],
-    })
-  }
+    if (isAdmin()) {
+      groups.push({
+        title: 'Administration',
+        items: [
+          { label: 'Users & Roles', path: '/admin/users', icon: Shield },
+          { label: 'Lead Handover', path: '/admin/leave', icon: FileText },
+          { label: 'System Settings', path: '/admin/settings', icon: Settings },
+        ],
+      })
+    }
+
+    return groups
+  }, [isAdmin])
 
   const renderNavGroup = (group) => {
     const visibleItems = group.items.filter(

@@ -65,7 +65,8 @@ export const getFollowUps = asyncHandler(async (req, res) => {
       .populate('completedBy', 'fullName email employeeId')
       .sort(sort)
       .skip(skip)
-      .limit(limit),
+      .limit(limit)
+      .lean(),
     FollowUp.countDocuments(filter),
   ])
 

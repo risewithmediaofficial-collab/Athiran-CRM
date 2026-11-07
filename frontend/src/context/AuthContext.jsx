@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react'
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react'
 import api from '../config/api'
 import { PERMISSIONS } from '../constants'
 
@@ -9,7 +9,7 @@ export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
-  const fetchCurrentUser = async () => {
+  const fetchCurrentUser = useCallback(async () => {
     const token = localStorage.getItem('accessToken')
     if (!token) {
       setIsLoading(false)
@@ -29,22 +29,22 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
     fetchCurrentUser()
-  }, [])
+  }, [fetchCurrentUser])
 
-  const login = async (username, password) => {
+  const login = useCallback(async (username, password) => {
     const response = await api.post('/auth/login', { username, password })
     const { user: userData, accessToken } = response.data.data
     localStorage.setItem('accessToken', accessToken)
     setUser(userData)
     setIsAuthenticated(true)
     return userData
-  }
+  }, [])
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       await api.post('/auth/logout')
     } catch {
@@ -55,44 +55,55 @@ export const AuthProvider = ({ children }) => {
       setIsAuthenticated(false)
       window.location.href = '/login'
     }
-  }
+  }, [])
 
-  const hasPermission = (permission) => {
+  const hasPermission = useCallback((permission) => {
     if (!user || !user.role) return false
     const perms = user.role.permissions || []
     return perms.includes(permission)
-  }
+  }, [user])
 
-  const hasAnyPermission = (...permissions) => {
+  const hasAnyPermission = useCallback((...permissions) => {
     if (!user || !user.role) return false
     const perms = user.role.permissions || []
     return permissions.some(p => perms.includes(p))
-  }
+  }, [user])
 
-  const hasRole = (roleName) => {
+  const hasRole = useCallback((roleName) => {
     if (!user || !user.role) return false
     return user.role.name === roleName
-  }
+  }, [user])
 
-  const isAdmin = () => {
+  const isAdmin = useCallback(() => {
     return hasRole('admin') || hasRole('super_admin')
-  }
+  }, [hasRole])
+
+  const contextValue = useMemo(() => ({
+    user,
+    isAuthenticated,
+    isLoading,
+    login,
+    logout,
+    hasPermission,
+    hasAnyPermission,
+    hasRole,
+    isAdmin,
+    refreshUser: fetchCurrentUser,
+  }), [
+    user,
+    isAuthenticated,
+    isLoading,
+    login,
+    logout,
+    hasPermission,
+    hasAnyPermission,
+    hasRole,
+    isAdmin,
+    fetchCurrentUser,
+  ])
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        isAuthenticated,
-        isLoading,
-        login,
-        logout,
-        hasPermission,
-        hasAnyPermission,
-        hasRole,
-        isAdmin,
-        refreshUser: fetchCurrentUser,
-      }}
-    >
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   )

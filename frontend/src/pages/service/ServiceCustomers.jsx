@@ -22,6 +22,7 @@ import Select from '../../components/ui/Select'
 import Modal from '../../components/ui/Modal'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import EmptyState from '../../components/ui/EmptyState'
+import useDebounce from '../../hooks/useDebounce'
 import { TAMIL_NADU_DISTRICTS, INDIAN_STATES } from '../../constants'
 
 export default function ServiceCustomers() {
@@ -29,6 +30,7 @@ export default function ServiceCustomers() {
   const [customers, setCustomers] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
+  const debouncedSearch = useDebounce(search, 350)
   const [page, setPage] = useState(1)
   const [pagination, setPagination] = useState({ total: 0, pages: 1 })
 
@@ -79,7 +81,7 @@ export default function ServiceCustomers() {
   const fetchCustomers = async () => {
     try {
       setLoading(true)
-      const res = await serviceApi.getCustomers({ search, page, limit: 15 })
+      const res = await serviceApi.getCustomers({ search: debouncedSearch, page, limit: 15 })
       const data = res.data?.data
       if (Array.isArray(data)) {
         setCustomers(data)
@@ -99,7 +101,7 @@ export default function ServiceCustomers() {
 
   useEffect(() => {
     fetchCustomers()
-  }, [search, page])
+  }, [debouncedSearch, page])
 
   const handleOpenAdd = () => {
     setFormData({

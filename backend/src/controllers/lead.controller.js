@@ -59,7 +59,8 @@ export const getLeads = asyncHandler(async (req, res) => {
       .populate('createdBy', 'fullName email employeeId designation')
       .sort(sort)
       .skip(skip)
-      .limit(limit),
+      .limit(limit)
+      .lean(),
     Lead.countDocuments(filter),
   ])
 
@@ -338,38 +339,36 @@ export const getLeadStats = asyncHandler(async (req, res) => {
   const todayStart = dayjs().startOf('day').toDate()
   const todayEnd = dayjs().endOf('day').toDate()
 
-  const [
-    total,
-    newLeads,
-    hotLeads,
-    warmLeads,
-    coldLeads,
-    convertedLeads,
-    lostLeads,
-    followupsDueToday,
-    overdueFollowups,
-  ] = await Promise.all([
-    Lead.countDocuments(base),
-    Lead.countDocuments({ ...base, status: 'new' }),
-    Lead.countDocuments({ ...base, leadTemperature: 'hot' }),
-    Lead.countDocuments({ ...base, leadTemperature: 'warm' }),
-    Lead.countDocuments({ ...base, leadTemperature: 'cold' }),
-    Lead.countDocuments({ ...base, status: 'converted' }),
-    Lead.countDocuments({ ...base, status: 'lost' }),
-    Lead.countDocuments({ ...base, nextFollowUpDate: { $gte: todayStart, $lte: todayEnd } }),
-    Lead.countDocuments({ ...base, nextFollowUpDate: { $lt: todayStart }, status: { $nin: ['converted', 'lost'] } }),
+  const facetResult = await Lead.aggregate([
+    { $match: base },
+    {
+      $facet: {
+        total: [{ $count: 'c' }],
+        newLeads: [{ $match: { status: 'new' } }, { $count: 'c' }],
+        hotLeads: [{ $match: { leadTemperature: 'hot' } }, { $count: 'c' }],
+        warmLeads: [{ $match: { leadTemperature: 'warm' } }, { $count: 'c' }],
+        coldLeads: [{ $match: { leadTemperature: 'cold' } }, { $count: 'c' }],
+        convertedLeads: [{ $match: { status: 'converted' } }, { $count: 'c' }],
+        lostLeads: [{ $match: { status: 'lost' } }, { $count: 'c' }],
+        followupsDueToday: [{ $match: { nextFollowUpDate: { $gte: todayStart, $lte: todayEnd } } }, { $count: 'c' }],
+        overdueFollowups: [{ $match: { nextFollowUpDate: { $lt: todayStart }, status: { $nin: ['converted', 'lost'] } } }, { $count: 'c' }],
+      },
+    },
   ])
 
+  const counts = facetResult[0] || {}
+  const getCount = (key) => counts[key]?.[0]?.c || 0
+
   return ApiResponse.ok({
-    total,
-    newLeads,
-    hotLeads,
-    warmLeads,
-    coldLeads,
-    convertedLeads,
-    lostLeads,
-    followupsDueToday,
-    overdueFollowups,
+    total: getCount('total'),
+    newLeads: getCount('newLeads'),
+    hotLeads: getCount('hotLeads'),
+    warmLeads: getCount('warmLeads'),
+    coldLeads: getCount('coldLeads'),
+    convertedLeads: getCount('convertedLeads'),
+    lostLeads: getCount('lostLeads'),
+    followupsDueToday: getCount('followupsDueToday'),
+    overdueFollowups: getCount('overdueFollowups'),
   }, 'Lead stats retrieved').send(res)
 })
 

@@ -7,6 +7,9 @@ const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/athira
 export const connectDB = async () => {
   try {
     await mongoose.connect(MONGODB_URI, {
+      maxPoolSize: 50,
+      minPoolSize: 10,
+      maxIdleTimeMS: 30000,
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 45000,
     })

@@ -27,11 +27,13 @@ import Modal from '../../components/ui/Modal'
 import Select from '../../components/ui/Select'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import EmptyState from '../../components/ui/EmptyState'
+import useDebounce from '../../hooks/useDebounce'
 
 export default function ServiceRecords() {
   const [services, setServices] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
+  const debouncedSearch = useDebounce(search, 350)
   const [statusFilter, setStatusFilter] = useState('')
   const [typeFilter, setTypeFilter] = useState('')
 
@@ -49,7 +51,7 @@ export default function ServiceRecords() {
     try {
       setLoading(true)
       const res = await serviceApi.getServices({
-        search,
+        search: debouncedSearch,
         status: statusFilter || undefined,
         serviceType: typeFilter || undefined,
       })
@@ -64,7 +66,7 @@ export default function ServiceRecords() {
 
   useEffect(() => {
     fetchServices()
-  }, [search, statusFilter, typeFilter])
+  }, [debouncedSearch, statusFilter, typeFilter])
 
   const handleOpenView = (svc) => {
     setSelectedService(svc)

@@ -177,31 +177,71 @@ export const getServiceDashboardStats = asyncHandler(async (req, res) => {
   const [
     totalCustomers,
     totalTractors,
-    totalServices,
-    servicesToday,
-    pendingServices,
-    completedServices,
-    servicesThisWeek,
+    serviceRecordStats,
+    tractorHoursStats,
   ] = await Promise.all([
     Customer.countDocuments({}),
     Tractor.countDocuments({}),
-    ServiceRecord.countDocuments({}),
-    ServiceRecord.countDocuments({ serviceDate: { $gte: todayStart, $lte: todayEnd } }),
-    ServiceRecord.countDocuments({ status: { $in: ['pending', 'in_progress', 'scheduled'] } }),
-    ServiceRecord.countDocuments({ status: 'completed' }),
-    ServiceRecord.countDocuments({ serviceDate: { $gte: todayStart, $lte: weekEnd } }),
+    ServiceRecord.aggregate([
+      {
+        $facet: {
+          totalServices: [{ $count: 'count' }],
+          servicesToday: [
+            { $match: { serviceDate: { $gte: todayStart, $lte: todayEnd } } },
+            { $count: 'count' },
+          ],
+          pendingServices: [
+            { $match: { status: { $in: ['pending', 'in_progress', 'scheduled'] } } },
+            { $count: 'count' },
+          ],
+          completedServices: [
+            { $match: { status: 'completed' } },
+            { $count: 'count' },
+          ],
+          servicesThisWeek: [
+            { $match: { serviceDate: { $gte: todayStart, $lte: weekEnd } } },
+            { $count: 'count' },
+          ],
+        },
+      },
+    ]),
+    Tractor.aggregate([
+      { $match: { tractorStatus: 'active' } },
+      {
+        $project: {
+          remainingHours: {
+            $subtract: [
+              { $add: [{ $ifNull: ['$lastServiceHours', 0] }, { $ifNull: ['$serviceIntervalHours', 250] }] },
+              { $ifNull: ['$currentEngineHours', 0] },
+            ],
+          },
+        },
+      },
+      {
+        $facet: {
+          overdue: [
+            { $match: { remainingHours: { $lte: 0 } } },
+            { $count: 'count' },
+          ],
+          dueSoon: [
+            { $match: { remainingHours: { $gt: 0, $lte: 25 } } },
+            { $count: 'count' },
+          ],
+        },
+      },
+    ]),
   ])
 
-  // Count tractors overdue by hours
-  const allTractors = await Tractor.find({ tractorStatus: 'active' }).lean()
-  let tractorsDueByHours = 0
-  let tractorsOverdue = 0
+  const svcCounts = serviceRecordStats[0] || {}
+  const totalServices = svcCounts.totalServices?.[0]?.count || 0
+  const servicesToday = svcCounts.servicesToday?.[0]?.count || 0
+  const pendingServices = svcCounts.pendingServices?.[0]?.count || 0
+  const completedServices = svcCounts.completedServices?.[0]?.count || 0
+  const servicesThisWeek = svcCounts.servicesThisWeek?.[0]?.count || 0
 
-  allTractors.forEach((t) => {
-    const pred = predictNextService(t, [])
-    if (pred.isOverdue) tractorsOverdue++
-    else if (pred.alertLevel === 'critical' || pred.alertLevel === 'warning') tractorsDueByHours++
-  })
+  const trCounts = tractorHoursStats[0] || {}
+  const tractorsOverdue = trCounts.overdue?.[0]?.count || 0
+  const tractorsDueByHours = trCounts.dueSoon?.[0]?.count || 0
 
   return ApiResponse.ok({
     totalCustomers,

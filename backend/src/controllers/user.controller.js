@@ -44,7 +44,8 @@ export const getUsers = asyncHandler(async (req, res) => {
       .populate('role', 'name displayName department')
       .sort(sort)
       .skip(skip)
-      .limit(Number(limit)),
+      .limit(Number(limit))
+      .lean(),
     User.countDocuments(filter),
   ])
 
