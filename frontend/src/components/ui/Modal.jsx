@@ -46,15 +46,15 @@ export default function Modal({
         onClick={onClose}
       />
 
-      <div className="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+      <div className="flex min-h-full items-center justify-center p-3 sm:p-4 text-center">
         <div
-          className={`relative transform overflow-hidden rounded-2xl bg-white text-left shadow-xl transition-all w-full my-8 border border-slate-200/80 ${
+          className={`relative transform overflow-hidden rounded-2xl bg-white text-left shadow-xl transition-all w-full my-4 sm:my-8 border border-slate-200/80 ${
             sizeMap[size] || sizeMap.md
           }`}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+          <div className="flex items-center justify-between border-b border-slate-100 px-4 sm:px-6 py-4">
             <div>
               <h3 className="text-base font-semibold text-slate-900">{title}</h3>
               {description && (
@@ -70,11 +70,11 @@ export default function Modal({
           </div>
 
           {/* Body */}
-          <div className="px-6 py-4 text-sm text-slate-700">{children}</div>
+          <div className="px-4 sm:px-6 py-4 text-sm text-slate-700">{children}</div>
 
           {/* Optional Footer */}
           {footer && (
-            <div className="border-t border-slate-100 px-6 py-3 bg-slate-50/50 flex items-center justify-end gap-2">
+            <div className="border-t border-slate-100 px-4 sm:px-6 py-3 bg-slate-50/50 flex items-center justify-end gap-2">
               {footer}
             </div>
           )}

@@ -220,14 +220,20 @@ export default function FollowUps() {
             Scheduled customer calls, farm visits, demonstrations, and sales pipeline engagements
           </p>
         </div>
-        <Button variant="primary" size="sm" icon={<Plus className="w-4 h-4" />} onClick={handleOpenSchedule}>
+        <Button
+          variant="primary"
+          size="sm"
+          icon={<Plus className="w-4 h-4" />}
+          onClick={handleOpenSchedule}
+          className="w-full sm:w-auto shrink-0 cursor-pointer"
+        >
           Schedule Follow-Up
         </Button>
       </div>
 
       {/* Tabs & Search */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 flex flex-col sm:flex-row gap-3 items-center justify-between">
-        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 text-xs font-semibold">
+      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-3 sm:p-4 flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
+        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 text-xs font-semibold overflow-x-auto custom-scrollbar">
           {[
             { id: 'all', label: 'All Tasks' },
             { id: 'today', label: 'Due Today' },
@@ -237,8 +243,8 @@ export default function FollowUps() {
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
-              className={`px-3 py-1.5 rounded-lg transition-all ${
-                tab === t.id ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-600 hover:text-slate-900'
+              className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all flex-1 sm:flex-none text-center cursor-pointer ${
+                tab === t.id ? 'bg-white text-slate-900 shadow-2xs font-bold' : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               {t.label}
@@ -246,14 +252,14 @@ export default function FollowUps() {
           ))}
         </div>
 
-        <div className="relative w-full sm:w-72">
+        <div className="relative w-full md:w-72">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
             type="text"
             placeholder="Search customer, tractor..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-1.5 text-sm rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-primary-500/20"
+            className="w-full pl-9 pr-4 py-2 text-sm rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-primary-500/20"
           />
         </div>
       </div>
@@ -270,7 +276,7 @@ export default function FollowUps() {
             title="No Follow-Ups Found"
             description={tab !== 'all' ? `No follow-ups match the '${tab}' filter.` : 'You have no scheduled follow-up tasks. Keep your sales pipeline active by scheduling a reminder.'}
             action={
-              <Button variant="primary" size="sm" icon={<Plus className="w-4 h-4" />} onClick={handleOpenSchedule}>
+              <Button variant="primary" size="sm" icon={<Plus className="w-4 h-4" />} onClick={handleOpenSchedule} className="cursor-pointer">
                 Schedule Follow-Up
               </Button>
             }
@@ -286,72 +292,72 @@ export default function FollowUps() {
                   onClick={() => {
                     if (leadTargetId) navigate(`/leads/${leadTargetId}`)
                   }}
-                  className={`p-4 sm:px-6 hover:bg-primary-50/40 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4 group ${
+                  className={`p-4 sm:px-6 hover:bg-primary-50/40 transition-colors flex flex-col md:flex-row md:items-center justify-between gap-4 group ${
                     leadTargetId ? 'cursor-pointer' : ''
                   }`}
                   title={leadTargetId ? 'Click anywhere to view lead details' : ''}
                 >
-                  <div className="flex items-start gap-3">
+                  <div className="flex items-start gap-3 min-w-0 flex-1">
                     <div className={`w-9 h-9 rounded-xl border flex items-center justify-center shrink-0 mt-0.5 ${
                       f.status === 'completed' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : isPast ? 'bg-red-50 text-red-600 border-red-100' : 'bg-primary-50 text-primary-600 border-primary-100'
                     }`}>
                       {typeIcon(f.type)}
                     </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-slate-900 group-hover:text-primary-600 transition-colors">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-semibold text-slate-900 group-hover:text-primary-600 transition-colors break-words">
                           {f.lead?.customerName || f.lead?.name || 'Customer Lead'}
                         </span>
                         <Badge variant={f.status === 'completed' ? 'success' : isPast ? 'danger' : 'info'}>
                           {f.status === 'completed' ? 'Completed' : isPast ? 'Overdue' : 'Pending'}
                         </Badge>
                       </div>
-                      <p className="text-xs text-slate-500 mt-0.5">
+                      <p className="text-xs text-slate-500 mt-0.5 break-words">
                         {(f.lead?.primaryMobile || f.lead?.mobileNumber) ? `Phone: ${f.lead.primaryMobile || f.lead.mobileNumber} • ` : ''}Model: <span className="text-slate-700 font-medium">{f.lead?.tractorModelInterested || f.lead?.tractorModel || 'Tractor Inquiry'}</span>
                       </p>
 
                       {/* Who is Following Up & Who Initiated */}
                       <div className="flex flex-wrap items-center gap-1.5 mt-2 text-[11px]">
                         <span className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-50 text-blue-800 font-medium border border-blue-100">
-                          <UserCheck className="w-3 h-3 text-blue-600" />
+                          <UserCheck className="w-3 h-3 text-blue-600 shrink-0" />
                           <span>Following Up: <strong>{f.assignedTo?.fullName || 'Assigned Rep'}</strong></span>
                         </span>
 
                         <span className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-medium border border-slate-200">
-                          <Clock className="w-3 h-3 text-slate-500" />
+                          <Clock className="w-3 h-3 text-slate-500 shrink-0" />
                           <span>Scheduled By: <strong>{f.createdBy?.fullName || 'Admin'}</strong></span>
                         </span>
 
                         {f.lead?.createdBy?.fullName && (
                           <span className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 font-medium border border-emerald-100">
-                            <ShieldCheck className="w-3 h-3 text-emerald-600" />
+                            <ShieldCheck className="w-3 h-3 text-emerald-600 shrink-0" />
                             <span>Lead Initiator: <strong>{f.lead.createdBy.fullName}</strong></span>
                           </span>
                         )}
 
                         {f.status === 'completed' && (
                           <span className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-100/70 text-emerald-900 font-medium">
-                            <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                            <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" />
                             <span>Completed by: <strong>{f.completedBy?.fullName || f.assignedTo?.fullName || 'Staff'}</strong></span>
                           </span>
                         )}
                       </div>
 
                       {f.notes && (
-                        <p className="text-xs text-slate-600 mt-2 bg-slate-50 p-2 rounded-lg border border-slate-100 max-w-xl">
+                        <p className="text-xs text-slate-600 mt-2 bg-slate-50 p-2.5 rounded-lg border border-slate-100 max-w-xl break-words">
                           "{f.notes}"
                         </p>
                       )}
                       {f.completionNotes && (
-                        <p className="text-xs text-emerald-800 mt-1 bg-emerald-50/70 p-2 rounded-lg border border-emerald-100 max-w-xl">
+                        <p className="text-xs text-emerald-800 mt-1.5 bg-emerald-50/70 p-2.5 rounded-lg border border-emerald-100 max-w-xl break-words">
                           <span className="font-semibold">Outcome: </span>"{f.completionNotes}"
                         </p>
                       )}
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3 shrink-0">
-                    <div className="text-right">
+                  <div className="flex items-center justify-between md:justify-end gap-3 pt-3 md:pt-0 border-t border-slate-100 md:border-0 shrink-0">
+                    <div className="text-left md:text-right">
                       <div className="text-xs font-semibold text-slate-800">
                         {new Date(f.scheduledDate).toLocaleDateString('en-IN', {
                           day: 'numeric',
@@ -375,7 +381,7 @@ export default function FollowUps() {
                             e.stopPropagation()
                             navigate(`/leads/${leadTargetId}`)
                           }}
-                          className="p-1.5 rounded-lg text-slate-500 hover:text-primary-600 hover:bg-primary-50 transition-colors"
+                          className="p-1.5 rounded-lg text-slate-500 hover:text-primary-600 hover:bg-primary-50 transition-colors cursor-pointer"
                         >
                           <Eye className="w-4 h-4" />
                         </button>
@@ -387,7 +393,7 @@ export default function FollowUps() {
                             e.stopPropagation()
                             handleOpenComplete(f)
                           }}
-                          className="p-1.5 rounded-lg text-emerald-600 hover:bg-emerald-50 transition-colors"
+                          className="p-1.5 rounded-lg text-emerald-600 hover:bg-emerald-50 transition-colors cursor-pointer"
                         >
                           <Check className="w-4 h-4" />
                         </button>
@@ -398,7 +404,7 @@ export default function FollowUps() {
                           e.stopPropagation()
                           handleOpenEdit(f)
                         }}
-                        className="p-1.5 rounded-lg text-slate-500 hover:text-amber-600 hover:bg-amber-50 transition-colors"
+                        className="p-1.5 rounded-lg text-slate-500 hover:text-amber-600 hover:bg-amber-50 transition-colors cursor-pointer"
                       >
                         <Pencil className="w-4 h-4" />
                       </button>
@@ -408,7 +414,7 @@ export default function FollowUps() {
                           e.stopPropagation()
                           handleOpenDelete(f)
                         }}
-                        className="p-1.5 rounded-lg text-slate-500 hover:text-red-600 hover:bg-red-50 transition-colors"
+                        className="p-1.5 rounded-lg text-slate-500 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -454,7 +460,8 @@ export default function FollowUps() {
                 { value: '', label: '-- Choose Lead --' },
                 ...leads.map((l) => ({
                   value: l._id,
-                  label: `${l.customerName} (${l.primaryMobile || l.mobileNumber || ''}) - ${l.tractorModelInterested || l.interestedModel || l.tractorModel || 'Inquiry'}`,
+                  label: `${l.customerName} • ${l.primaryMobile || l.mobileNumber || ''}`,
+                  description: `${l.leadId || ''} • ${l.tractorModelInterested || l.interestedModel || l.tractorModel || 'Tractor Inquiry'}${l.status ? ` • [${l.status.replace('_', ' ')}]` : ''}`,
                 })),
               ]}
               placeholder="-- Choose Lead --"
@@ -468,39 +475,25 @@ export default function FollowUps() {
               onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
               options={[
                 ...(currentUser?._id
-                  ? [{ value: currentUser._id, label: `Assign to Myself (${currentUser.fullName})` }]
+                  ? [{
+                      value: currentUser._id,
+                      label: `Assign to Myself (${currentUser.fullName})`,
+                      description: `${currentUser.role?.displayName || currentUser.department || 'Sales'}${currentUser.employeeId ? ` • ID: ${currentUser.employeeId}` : ''}`,
+                    }]
                   : []),
                 ...users
                   .filter((u) => u._id !== currentUser?._id)
                   .map((u) => ({
                     value: u._id,
-                    label: `${u.fullName} • ${u.role?.displayName || u.department || 'Sales'}${u.employeeId ? ` (${u.employeeId})` : ''}`,
+                    label: u.fullName,
+                    description: `${u.role?.displayName || u.department || 'Sales'}${u.employeeId ? ` • ID: ${u.employeeId}` : ''}`,
                   })),
               ]}
               helperText="Designate the representative responsible for reaching out to the customer."
             />
           </div>
 
-          <div>
-            <Select
-              label="Assigned Executive (Who is Following Up?)"
-              value={formData.assignedTo}
-              onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
-              options={[
-                ...(currentUser?._id
-                  ? [{ value: currentUser._id, label: `Assign to Myself (${currentUser.fullName})` }]
-                  : []),
-                ...users
-                  .filter((u) => u._id !== currentUser?._id)
-                  .map((u) => ({
-                    value: u._id,
-                    label: `${u.fullName} • ${u.role?.displayName || u.department || 'Sales'}${u.employeeId ? ` (${u.employeeId})` : ''}`,
-                  })),
-              ]}
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Select
                 label="Interaction Channel"
@@ -545,11 +538,11 @@ export default function FollowUps() {
             />
           </div>
 
-          <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-2.5">
-            <Button variant="secondary" type="button" onClick={() => setIsScheduleOpen(false)}>
+          <div className="pt-4 border-t border-slate-100 flex flex-col-reverse sm:flex-row items-center justify-end gap-2.5">
+            <Button variant="secondary" type="button" onClick={() => setIsScheduleOpen(false)} className="w-full sm:w-auto cursor-pointer">
               Cancel
             </Button>
-            <Button variant="primary" type="submit" loading={submitting}>
+            <Button variant="primary" type="submit" loading={submitting} className="w-full sm:w-auto cursor-pointer">
               Schedule Task
             </Button>
           </div>
@@ -578,19 +571,24 @@ export default function FollowUps() {
               onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
               options={[
                 ...(currentUser?._id
-                  ? [{ value: currentUser._id, label: `Assign to Myself (${currentUser.fullName})` }]
+                  ? [{
+                      value: currentUser._id,
+                      label: `Assign to Myself (${currentUser.fullName})`,
+                      description: `${currentUser.role?.displayName || currentUser.department || 'Sales'}${currentUser.employeeId ? ` • ID: ${currentUser.employeeId}` : ''}`,
+                    }]
                   : []),
                 ...users
                   .filter((u) => u._id !== currentUser?._id)
                   .map((u) => ({
                     value: u._id,
-                    label: `${u.fullName} • ${u.role?.displayName || u.department || 'Sales'}${u.employeeId ? ` (${u.employeeId})` : ''}`,
+                    label: u.fullName,
+                    description: `${u.role?.displayName || u.department || 'Sales'}${u.employeeId ? ` • ID: ${u.employeeId}` : ''}`,
                   })),
               ]}
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Select
                 label="Channel"
@@ -634,11 +632,11 @@ export default function FollowUps() {
             />
           </div>
 
-          <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-2.5">
-            <Button variant="secondary" type="button" onClick={() => setIsEditOpen(false)}>
+          <div className="pt-4 border-t border-slate-100 flex flex-col-reverse sm:flex-row items-center justify-end gap-2.5">
+            <Button variant="secondary" type="button" onClick={() => setIsEditOpen(false)} className="w-full sm:w-auto cursor-pointer">
               Cancel
             </Button>
-            <Button variant="primary" type="submit" loading={submitting}>
+            <Button variant="primary" type="submit" loading={submitting} className="w-full sm:w-auto cursor-pointer">
               Update Follow-Up
             </Button>
           </div>
@@ -667,11 +665,11 @@ export default function FollowUps() {
               required
             />
           </div>
-          <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2.5">
-            <Button variant="secondary" type="button" onClick={() => setIsCompleteOpen(false)}>
+          <div className="pt-3 border-t border-slate-100 flex flex-col-reverse sm:flex-row items-center justify-end gap-2.5">
+            <Button variant="secondary" type="button" onClick={() => setIsCompleteOpen(false)} className="w-full sm:w-auto cursor-pointer">
               Cancel
             </Button>
-            <Button variant="primary" type="submit" loading={submitting}>
+            <Button variant="primary" type="submit" loading={submitting} className="w-full sm:w-auto cursor-pointer">
               Mark Completed
             </Button>
           </div>
@@ -689,11 +687,11 @@ export default function FollowUps() {
           <p className="text-sm text-slate-600">
             Are you sure you want to delete this follow-up reminder?
           </p>
-          <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2.5">
-            <Button variant="secondary" onClick={() => setIsDeleteOpen(false)}>
+          <div className="pt-3 border-t border-slate-100 flex flex-col-reverse sm:flex-row items-center justify-end gap-2.5">
+            <Button variant="secondary" onClick={() => setIsDeleteOpen(false)} className="w-full sm:w-auto cursor-pointer">
               Cancel
             </Button>
-            <Button variant="danger" loading={submitting} onClick={handleDelete}>
+            <Button variant="danger" loading={submitting} onClick={handleDelete} className="w-full sm:w-auto cursor-pointer">
               Delete Task
             </Button>
           </div>
