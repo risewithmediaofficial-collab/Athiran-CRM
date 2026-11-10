@@ -20,6 +20,7 @@ import followupRoutes from './routes/followup.routes.js'
 import assignmentRoutes from './routes/assignment.routes.js'
 import customerRoutes from './routes/customer.routes.js'
 import tractorRoutes from './routes/tractor.routes.js'
+import tractorModelRoutes from './routes/tractorModel.routes.js'
 import serviceRoutes from './routes/service.routes.js'
 import leaveRoutes from './routes/leave.routes.js'
 import reportRoutes from './routes/report.routes.js'
@@ -72,6 +73,7 @@ app.use(`${BASE}/followups`, followupRoutes)
 app.use(`${BASE}/assignments`, assignmentRoutes)
 app.use(`${BASE}/customers`, customerRoutes)
 app.use(`${BASE}/tractors`, tractorRoutes)
+app.use(`${BASE}/tractor-models`, tractorModelRoutes)
 app.use(`${BASE}/services`, serviceRoutes)
 app.use(`${BASE}/leave`, leaveRoutes)
 app.use(`${BASE}/reports`, reportRoutes)

@@ -134,21 +134,13 @@ export const INDIAN_STATES = [
 ]
 
 export const TRACTOR_MODELS = [
-  'Athiran PowerTrac 45 HP (2WD)',
-  'Athiran PowerTrac 50 HP (4WD)',
-  'Athiran FarmTrac 55 HP (4WD)',
-  'Athiran AgroTrac 60 HP Heavy Duty',
-  'Athiran CompactTrac 35 HP Orchard Special',
-  'Athiran SuperTrac 75 HP Turbo',
-  'Mahindra 575 DI (45 HP)',
-  'Mahindra 475 DI (42 HP)',
-  'Swaraj 744 FE (48 HP)',
-  'Swaraj 855 FE (52 HP)',
-  'John Deere 5050 D (50 HP)',
-  'Massey Ferguson 241 DI (42 HP)',
-  'Powertrac Euro 50 (50 HP)',
-  'Sonalika DI 42 RX (42 HP)',
-  'Other Model',
+  'Massey Ferguson 1035 DI Maha Shakti',
+  'Massey Ferguson 241 DI / Maha Shakti / Planetary Plus',
+  'Massey Ferguson 7250 DI / Power Up / Challenger',
+  'Massey Ferguson 245 DI / Smart',
+  'Massey Ferguson 9500 / Super Shuttle',
+  'Massey Ferguson 9563 Smart (Trem-IV)',
+  'Massey Ferguson 2635 4WD',
 ]
 
 export const LEAVE_TYPES = {

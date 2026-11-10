@@ -47,6 +47,7 @@ export default function MainLayout() {
         title: 'Main',
         items: [
           { label: 'Overview', path: '/dashboard', icon: LayoutDashboard },
+          { label: 'Tractor Models', path: '/tractor-models', icon: Tractor },
         ],
       },
       {

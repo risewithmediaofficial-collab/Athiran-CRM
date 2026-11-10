@@ -1,7 +1,9 @@
 import argon2 from 'argon2'
 import { Role } from '../models/Role.js'
 import { User } from '../models/User.js'
+import { TractorModel } from '../models/TractorModel.js'
 import { ROLE_PERMISSIONS } from '../constants/permissions.js'
+import { INITIAL_TRACTOR_MODELS } from '../constants/tractorModels.seed.js'
 import { generateId, PREFIXES } from '../utils/generateId.js'
 import { logger } from '../utils/logger.js'
 
@@ -53,6 +55,15 @@ export const seedInitialData = async () => {
         accountStatus: 'active',
       })
       logger.info(`✓ Auto-seeded Super Admin account (${adminUsername})`)
+    }
+
+    // Seed Massey Ferguson tractor models catalog if not yet present
+    for (const model of INITIAL_TRACTOR_MODELS) {
+      await TractorModel.findOneAndUpdate(
+        { modelCode: model.modelCode },
+        { $setOnInsert: model },
+        { upsert: true }
+      )
     }
   } catch (err) {
     logger.error('Auto-seed error:', err)

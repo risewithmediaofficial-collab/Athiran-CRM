@@ -10,7 +10,9 @@ import {
   Trash2, 
   Wrench, 
   Calendar, 
-  AlertCircle 
+  AlertCircle,
+  Info,
+  List,
 } from 'lucide-react'
 import { serviceApi } from '../../api/service'
 import Button from '../../components/ui/Button'
@@ -20,10 +22,15 @@ import Modal from '../../components/ui/Modal'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import EmptyState from '../../components/ui/EmptyState'
 import useDebounce from '../../hooks/useDebounce'
-import { TRACTOR_MODELS } from '../../constants'
+import useTractorModels from '../../hooks/useTractorModels'
+import TractorModelsCatalog from '../../components/tractors/TractorModelsCatalog'
+import TractorModelSpecsModal from '../../components/tractors/TractorModelSpecsModal'
 
 export default function TractorManagement() {
   const navigate = useNavigate()
+  const { modelNames, findModelByName } = useTractorModels()
+  const [activeTab, setActiveTab] = useState('fleet')
+  const [specModalModel, setSpecModalModel] = useState(null)
   const [tractors, setTractors] = useState([])
   const [customers, setCustomers] = useState([])
   const [loading, setLoading] = useState(true)
@@ -90,15 +97,17 @@ export default function TractorManagement() {
   }, [debouncedSearch])
 
   const handleOpenAdd = () => {
+    const defaultModelName = modelNames[0] || 'Massey Ferguson 1035 DI Maha Shakti'
+    const matched = findModelByName(defaultModelName)
     setFormData({
       customer: customers[0]?._id || '',
-      model: TRACTOR_MODELS[0] || 'Athiran PowerTrac 45 HP (2WD)',
+      model: defaultModelName,
       registrationNumber: '',
       chassisNumber: '',
       engineNumber: '',
       purchaseDate: new Date().toISOString().split('T')[0],
       currentEngineHours: '',
-      serviceIntervalHours: 250,
+      serviceIntervalHours: matched?.serviceIntervalHours || 250,
     })
     setFormError('')
     setIsAddOpen(true)
@@ -233,14 +242,48 @@ export default function TractorManagement() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">Tractor Fleet Management</h1>
           <p className="text-sm text-slate-500 mt-1">
-            Engine-hour meter reading updates, serial verification, and service intervals
+            Engine-hour meter reading updates, serial verification, service intervals, and model specifications
           </p>
         </div>
-        <Button variant="primary" size="sm" icon={<Plus className="w-4 h-4" />} onClick={handleOpenAdd}>
-          Register Tractor
-        </Button>
+        {activeTab === 'fleet' && (
+          <Button variant="primary" size="sm" icon={<Plus className="w-4 h-4" />} onClick={handleOpenAdd}>
+            Register Tractor
+          </Button>
+        )}
       </div>
 
+      {/* View Switcher Tabs */}
+      <div className="inline-flex p-1 rounded-xl bg-slate-100 border border-slate-200/80 gap-1">
+        <button
+          type="button"
+          onClick={() => setActiveTab('fleet')}
+          className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+            activeTab === 'fleet'
+              ? 'bg-white text-slate-900 shadow-xs'
+              : 'text-slate-600 hover:text-slate-900'
+          }`}
+        >
+          <TractorIcon className="w-3.5 h-3.5" />
+          <span>Customer Fleet</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('models')}
+          className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+            activeTab === 'models'
+              ? 'bg-white text-slate-900 shadow-xs'
+              : 'text-slate-600 hover:text-slate-900'
+          }`}
+        >
+          <List className="w-3.5 h-3.5" />
+          <span>Tractor Models Catalog</span>
+        </button>
+      </div>
+
+      {activeTab === 'models' ? (
+        <TractorModelsCatalog />
+      ) : (
+        <>
       {/* Filter and Search Bar */}
       <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 flex flex-col sm:flex-row gap-3 items-center justify-between">
         <div className="relative w-full sm:w-80">
@@ -341,6 +384,18 @@ export default function TractorManagement() {
                     </td>
                     <td className="py-4 px-6 text-right" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-end gap-1.5">
+                        {findModelByName(t.model || t.modelName) && (
+                          <button
+                            title="View Model Specifications"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setSpecModalModel(findModelByName(t.model || t.modelName))
+                            }}
+                            className="p-1.5 rounded-lg text-slate-500 hover:text-primary-600 hover:bg-primary-50 transition-colors"
+                          >
+                            <Info className="w-4 h-4" />
+                          </button>
+                        )}
                         <button
                           title="Record Meter Reading"
                           onClick={(e) => {
@@ -390,6 +445,15 @@ export default function TractorManagement() {
           </div>
         )}
       </div>
+        </>
+      )}
+
+      {/* Specs Modal */}
+      <TractorModelSpecsModal
+        isOpen={Boolean(specModalModel)}
+        onClose={() => setSpecModalModel(null)}
+        model={specModalModel}
+      />
 
       {/* Add Tractor Modal */}
       <Modal
@@ -428,10 +492,21 @@ export default function TractorManagement() {
               label="Tractor Model"
               required
               value={formData.model}
-              onChange={(e) => setFormData({ ...formData, model: e.target.value })}
+              onChange={(e) => {
+                const selectedModelName = e.target.value
+                const matched = findModelByName(selectedModelName)
+                setFormData({
+                  ...formData,
+                  model: selectedModelName,
+                  serviceIntervalHours: matched?.serviceIntervalHours || formData.serviceIntervalHours,
+                })
+              }}
               options={[
                 { value: '', label: '-- Select Tractor Model --' },
-                ...TRACTOR_MODELS.map((m) => ({ value: m, label: m })),
+                ...(formData.model && !modelNames.includes(formData.model)
+                  ? [{ value: formData.model, label: formData.model }]
+                  : []),
+                ...modelNames.map((m) => ({ value: m, label: m })),
               ]}
               placeholder="-- Select Tractor Model --"
             />
@@ -520,10 +595,21 @@ export default function TractorManagement() {
               label="Tractor Model"
               required
               value={formData.model}
-              onChange={(e) => setFormData({ ...formData, model: e.target.value })}
+              onChange={(e) => {
+                const selectedModelName = e.target.value
+                const matched = findModelByName(selectedModelName)
+                setFormData({
+                  ...formData,
+                  model: selectedModelName,
+                  serviceIntervalHours: matched?.serviceIntervalHours || formData.serviceIntervalHours,
+                })
+              }}
               options={[
                 { value: '', label: '-- Select Tractor Model --' },
-                ...TRACTOR_MODELS.map((m) => ({ value: m, label: m })),
+                ...(formData.model && !modelNames.includes(formData.model)
+                  ? [{ value: formData.model, label: formData.model }]
+                  : []),
+                ...modelNames.map((m) => ({ value: m, label: m })),
               ]}
               placeholder="-- Select Tractor Model --"
             />

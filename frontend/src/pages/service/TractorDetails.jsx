@@ -13,7 +13,8 @@ import {
   AlertTriangle, 
   User, 
   Sparkles,
-  AlertCircle
+  AlertCircle,
+  Info,
 } from 'lucide-react'
 import { serviceApi } from '../../api/service'
 import Button from '../../components/ui/Button'
@@ -23,12 +24,15 @@ import Input from '../../components/ui/Input'
 import Select from '../../components/ui/Select'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import EmptyState from '../../components/ui/EmptyState'
-import { TRACTOR_MODELS } from '../../constants'
+import useTractorModels from '../../hooks/useTractorModels'
+import TractorModelSpecsModal from '../../components/tractors/TractorModelSpecsModal'
 
 export default function TractorDetails() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { modelNames, findModelByName } = useTractorModels()
   const [tractor, setTractor] = useState(null)
+  const [specModalModel, setSpecModalModel] = useState(null)
   const [prediction, setPrediction] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -187,12 +191,31 @@ export default function TractorDetails() {
             </button>
           </Link>
           <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-bold tracking-tight text-slate-900">{tractor.model}</h1>
+            <div className="flex flex-wrap items-center gap-2">
+              <h1
+                onDoubleClick={() => {
+                  const matched = findModelByName(tractor.model || tractor.modelName)
+                  if (matched) setSpecModalModel(matched)
+                }}
+                title={findModelByName(tractor.model || tractor.modelName) ? 'Double-click to view specifications' : undefined}
+                className="text-2xl font-bold tracking-tight text-slate-900 cursor-pointer"
+              >
+                {tractor.model}
+              </h1>
               {tractor.registrationNumber && (
                 <span className="font-mono text-xs px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-800 font-semibold">
                   {tractor.registrationNumber}
                 </span>
+              )}
+              {findModelByName(tractor.model || tractor.modelName) && (
+                <button
+                  type="button"
+                  onClick={() => setSpecModalModel(findModelByName(tractor.model || tractor.modelName))}
+                  className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full bg-primary-50 text-primary-700 border border-primary-100 hover:bg-primary-100 transition-colors cursor-pointer"
+                >
+                  <Info className="w-3.5 h-3.5" />
+                  <span>Model Specs</span>
+                </button>
               )}
             </div>
             <p className="text-xs text-slate-500 mt-0.5">
@@ -470,7 +493,10 @@ export default function TractorDetails() {
               onChange={(e) => setEditForm({ ...editForm, model: e.target.value })}
               options={[
                 { value: '', label: '-- Select Tractor Model --' },
-                ...TRACTOR_MODELS.map((m) => ({ value: m, label: m })),
+                ...(editForm.model && !modelNames.includes(editForm.model)
+                  ? [{ value: editForm.model, label: editForm.model }]
+                  : []),
+                ...modelNames.map((m) => ({ value: m, label: m })),
               ]}
               placeholder="-- Select Tractor Model --"
             />
@@ -559,6 +585,12 @@ export default function TractorDetails() {
           </div>
         </div>
       </Modal>
+
+      <TractorModelSpecsModal
+        isOpen={Boolean(specModalModel)}
+        onClose={() => setSpecModalModel(null)}
+        model={specModalModel}
+      />
     </div>
   )
 }

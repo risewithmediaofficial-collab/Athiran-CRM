@@ -1,5 +1,6 @@
 import { ServiceRecord } from '../models/ServiceRecord.js'
 import { Tractor } from '../models/Tractor.js'
+import { TractorModel } from '../models/TractorModel.js'
 import { Customer } from '../models/Customer.js'
 import { MeterReading } from '../models/MeterReading.js'
 import { predictNextService } from '../services/servicePrediction.service.js'
@@ -48,13 +49,80 @@ export const getServices = asyncHandler(async (req, res) => {
 })
 
 export const createService = asyncHandler(async (req, res) => {
-  const { customer, tractor, currentEngineHours, serviceType } = req.body
+  const {
+    customer,
+    tractor,
+    tractorModelId,
+    tractorModelName,
+    tractorModel,
+    registrationNumber,
+    currentEngineHours,
+    serviceType,
+  } = req.body
 
-  const tractorDoc = await Tractor.findById(tractor)
-  if (!tractorDoc) throw ApiError.notFound('Tractor')
+  const customerDoc = await Customer.findById(customer)
+  if (!customerDoc) throw ApiError.notFound('Customer')
+
+  const hoursInput = Number(currentEngineHours) || 0
+  let tractorDoc = null
+
+  if (tractor) {
+    tractorDoc = await Tractor.findById(tractor)
+    if (!tractorDoc) throw ApiError.notFound('Tractor')
+  } else {
+    const requestedModelName = (tractorModelName || tractorModel || '').trim()
+    const catalogModel = tractorModelId
+      ? await TractorModel.findById(tractorModelId).lean()
+      : (requestedModelName ? await TractorModel.findOne({ modelName: requestedModelName }).lean() : null)
+
+    const resolvedModelName = catalogModel?.modelName || requestedModelName
+    if (!resolvedModelName) {
+      throw ApiError.badRequest('Tractor or tractor model selection is required')
+    }
+
+    const regTrim = (registrationNumber || '').trim()
+    if (regTrim) {
+      tractorDoc = await Tractor.findOne({ customer, registrationNumber: regTrim })
+    } else {
+      tractorDoc = await Tractor.findOne({ customer, modelName: resolvedModelName })
+    }
+
+    if (!tractorDoc) {
+      const interval = catalogModel?.serviceIntervalHours || 250
+      const resolvedBrand =
+        catalogModel?.brand ||
+        (resolvedModelName.startsWith('Massey Ferguson') ? 'Massey Ferguson' : resolvedModelName.split(' ')[0]) ||
+        'Massey Ferguson'
+      const hpMatch = resolvedModelName.match(/(\d+)\s*HP/i)
+      const resolvedHp = catalogModel?.horsepower || (hpMatch ? Number(hpMatch[1]) : 42)
+
+      tractorDoc = await Tractor.create({
+        tractorId: generateId(PREFIXES.TRACTOR),
+        customer,
+        registrationNumber: regTrim || undefined,
+        modelName: resolvedModelName,
+        brand: resolvedBrand,
+        horsepower: resolvedHp,
+        currentEngineHours: hoursInput,
+        lastRecordedEngineHours: hoursInput,
+        lastReadingDate: new Date(),
+        serviceIntervalHours: interval,
+        nextServiceTargetHours: hoursInput + interval,
+        createdBy: req.user._id,
+      })
+
+      await MeterReading.create({
+        tractor: tractorDoc._id,
+        readingHours: hoursInput,
+        readingDate: new Date(),
+        recordedBy: req.user._id,
+        notes: 'Initial tractor entry from service job card',
+      })
+    }
+  }
 
   const serviceId = generateId(PREFIXES.SERVICE)
-  const hours = Number(currentEngineHours) || tractorDoc.currentEngineHours
+  const hours = currentEngineHours !== undefined && currentEngineHours !== '' ? Number(currentEngineHours) : tractorDoc.currentEngineHours
   const previousHours = tractorDoc.lastServiceHours || 0
   const serviceDate = req.body.serviceDate || req.body.scheduledDate || new Date()
   const serviceCost = Number(req.body.serviceCost) || Number(req.body.cost?.totalCost) || 0
@@ -64,7 +132,7 @@ export const createService = asyncHandler(async (req, res) => {
     ...req.body,
     serviceId,
     customer,
-    tractor,
+    tractor: tractorDoc._id,
     serviceDate,
     complaint,
     currentEngineHours: hours,

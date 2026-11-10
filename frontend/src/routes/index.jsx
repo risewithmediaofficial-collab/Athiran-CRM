@@ -34,6 +34,7 @@ const ServiceDashboard = lazy(() => import('../pages/service/ServiceDashboard'))
 const ServiceCustomers = lazy(() => import('../pages/service/ServiceCustomers'))
 const CustomerDetails = lazy(() => import('../pages/service/CustomerDetails'))
 const TractorManagement = lazy(() => import('../pages/service/TractorManagement'))
+const TractorModels = lazy(() => import('../pages/service/TractorModels'))
 const TractorDetails = lazy(() => import('../pages/service/TractorDetails'))
 const ServiceRecords = lazy(() => import('../pages/service/ServiceRecords'))
 const AddService = lazy(() => import('../pages/service/AddService'))
@@ -82,6 +83,7 @@ export default function AppRoutes() {
         >
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<AdminDashboard />} />
+          <Route path="/tractor-models" element={<TractorModels />} />
 
           {/* Sales Module */}
           <Route path="/sales" element={<SalesDashboard />} />

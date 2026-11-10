@@ -23,7 +23,12 @@ router.post(
   '/',
   [
     body('customer').notEmpty().withMessage('Customer reference is required'),
-    body('tractor').notEmpty().withMessage('Tractor reference is required'),
+    body('tractor').custom((val, { req }) => {
+      if (!val && !req.body.tractorModelId && !req.body.tractorModelName && !req.body.tractorModel) {
+        throw new Error('Tractor or tractor model selection is required')
+      }
+      return true
+    }),
     body('serviceType').notEmpty().withMessage('Service type is required'),
     body('serviceDate').custom((val, { req }) => {
       const dateVal = val || req.body.scheduledDate

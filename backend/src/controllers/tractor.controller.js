@@ -1,4 +1,5 @@
 import { Tractor } from '../models/Tractor.js'
+import { TractorModel } from '../models/TractorModel.js'
 import { Customer } from '../models/Customer.js'
 import { ServiceRecord } from '../models/ServiceRecord.js'
 import { MeterReading } from '../models/MeterReading.js'
@@ -70,10 +71,17 @@ export const createTractor = asyncHandler(async (req, res) => {
   const tractorId = generateId(PREFIXES.TRACTOR)
   const nextServiceTargetHours = initialHours + Number(serviceIntervalHours)
 
-  const modelName = req.body.modelName || req.body.model || 'Athiran PowerTrac 45 HP'
-  const brand = req.body.brand || (modelName.split(' ')[0]) || 'Athiran'
+  const modelName = req.body.modelName || req.body.model || 'Massey Ferguson 241 DI / Maha Shakti / Planetary Plus'
+  const catalogModel = await TractorModel.findOne({ modelName }).lean()
+  const brand =
+    req.body.brand ||
+    catalogModel?.brand ||
+    (modelName.startsWith('Massey Ferguson') ? 'Massey Ferguson' : modelName.split(' ')[0]) ||
+    'Massey Ferguson'
   const hpMatch = modelName.match(/(\d+)\s*HP/i)
-  const horsepower = req.body.horsepower ? Number(req.body.horsepower) : (hpMatch ? Number(hpMatch[1]) : 45)
+  const horsepower = req.body.horsepower
+    ? Number(req.body.horsepower)
+    : (catalogModel?.horsepower || (hpMatch ? Number(hpMatch[1]) : 42))
 
   const tractor = await Tractor.create({
     ...req.body,
@@ -148,13 +156,20 @@ export const updateTractor = asyncHandler(async (req, res) => {
   delete req.body.tractorId
   delete req.body.createdBy
 
-  if (req.body.model) {
-    tractor.modelName = req.body.model
-    tractor.brand = req.body.brand || req.body.model.split(' ')[0] || tractor.brand
-    const hpMatch = req.body.model.match(/(\d+)\s*HP/i)
-    if (hpMatch) tractor.horsepower = Number(hpMatch[1])
+  if (req.body.model || req.body.modelName) {
+    const resolvedModelName = req.body.modelName || req.body.model
+    const catalogModel = await TractorModel.findOne({ modelName: resolvedModelName }).lean()
+    tractor.modelName = resolvedModelName
+    tractor.brand =
+      req.body.brand ||
+      catalogModel?.brand ||
+      (resolvedModelName.startsWith('Massey Ferguson') ? 'Massey Ferguson' : resolvedModelName.split(' ')[0]) ||
+      tractor.brand
+    const hpMatch = resolvedModelName.match(/(\d+)\s*HP/i)
+    if (req.body.horsepower) tractor.horsepower = Number(req.body.horsepower)
+    else if (catalogModel?.horsepower) tractor.horsepower = catalogModel.horsepower
+    else if (hpMatch) tractor.horsepower = Number(hpMatch[1])
   }
-  if (req.body.modelName) tractor.modelName = req.body.modelName
   if (req.body.brand) tractor.brand = req.body.brand
   if (req.body.registrationNumber !== undefined) tractor.registrationNumber = req.body.registrationNumber
   if (req.body.chassisNumber !== undefined) tractor.chassisNumber = req.body.chassisNumber

@@ -24,11 +24,13 @@ import Input from '../../components/ui/Input'
 import Select from '../../components/ui/Select'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import EmptyState from '../../components/ui/EmptyState'
-import { TRACTOR_MODELS, TAMIL_NADU_DISTRICTS, INDIAN_STATES } from '../../constants'
+import { TAMIL_NADU_DISTRICTS, INDIAN_STATES } from '../../constants'
+import useTractorModels from '../../hooks/useTractorModels'
 
 export default function CustomerDetails() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { modelNames } = useTractorModels()
   const [customer, setCustomer] = useState(null)
   const [tractors, setTractors] = useState([])
   const [services, setServices] = useState([])
@@ -250,7 +252,7 @@ export default function CustomerDetails() {
             icon={<Plus className="w-4 h-4" />}
             onClick={() => {
               setTractorForm({
-                model: TRACTOR_MODELS[0] || 'Athiran PowerTrac 45 HP (2WD)',
+                model: modelNames[0] || 'Massey Ferguson 1035 DI Maha Shakti',
                 registrationNumber: '',
                 chassisNumber: '',
                 engineNumber: '',
@@ -370,7 +372,7 @@ export default function CustomerDetails() {
             icon={<Plus className="w-3.5 h-3.5" />}
             onClick={() => {
               setTractorForm({
-                model: '',
+                model: modelNames[0] || 'Massey Ferguson 1035 DI Maha Shakti',
                 registrationNumber: '',
                 chassisNumber: '',
                 engineNumber: '',
@@ -506,7 +508,10 @@ export default function CustomerDetails() {
               onChange={(e) => setTractorForm({ ...tractorForm, model: e.target.value })}
               options={[
                 { value: '', label: '-- Select Tractor Model --' },
-                ...TRACTOR_MODELS.map((m) => ({ value: m, label: m })),
+                ...(tractorForm.model && !modelNames.includes(tractorForm.model)
+                  ? [{ value: tractorForm.model, label: tractorForm.model }]
+                  : []),
+                ...modelNames.map((m) => ({ value: m, label: m })),
               ]}
               placeholder="-- Select Tractor Model --"
             />

@@ -9,9 +9,12 @@ import {
   User, 
   Tractor as TractorIcon, 
   CheckCircle2, 
-  AlertCircle 
+  AlertCircle,
+  Info,
 } from 'lucide-react'
 import { serviceApi } from '../../api/service'
+import useTractorModels from '../../hooks/useTractorModels'
+import TractorModelSpecsModal from '../../components/tractors/TractorModelSpecsModal'
 import Button from '../../components/ui/Button'
 import Input from '../../components/ui/Input'
 import Select from '../../components/ui/Select'
@@ -23,16 +26,21 @@ export default function AddService() {
   const preTractorId = searchParams.get('tractorId')
   const preCustomerId = searchParams.get('customerId')
 
+  const { models: catalogModels, findModelByName } = useTractorModels()
+
   const [customers, setCustomers] = useState([])
   const [tractors, setTractors] = useState([])
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [formError, setFormError] = useState('')
+  const [specModalModel, setSpecModalModel] = useState(null)
 
   // Form State
   const [formData, setFormData] = useState({
     customer: preCustomerId || '',
     tractor: preTractorId || '',
+    catalogModelName: '',
+    registrationNumber: '',
     serviceType: 'routine_paid',
     scheduledDate: new Date().toISOString().split('T')[0],
     currentEngineHours: '',
@@ -86,11 +94,63 @@ export default function AddService() {
     ? tractors.filter((t) => String(t.customer?._id || t.customer) === String(formData.customer))
     : tractors
 
-  const handleTractorChange = (tractorId) => {
-    const selected = tractors.find((t) => t._id === tractorId)
+  const selectedFleetTractor = formData.tractor
+    ? tractors.find((t) => t._id === formData.tractor)
+    : null
+
+  const activeSpecModel = selectedFleetTractor
+    ? findModelByName(selectedFleetTractor.model || selectedFleetTractor.modelName)
+    : formData.catalogModelName
+      ? findModelByName(formData.catalogModelName)
+      : null
+
+  const tractorSelectValue = formData.tractor
+    ? formData.tractor
+    : formData.catalogModelName
+      ? `catalog:${formData.catalogModelName}`
+      : ''
+
+  const tractorDropdownOptions = [
+    { value: '', label: '-- Select Tractor Model --' },
+    ...availableTractors.map((t) => ({
+      value: t._id,
+      label: `${t.model || t.modelName || 'Tractor'} (${t.registrationNumber || t.chassisNumber || 'No Reg'}) - ${t.currentEngineHours || 0} hrs`,
+      description: `Registered Customer Tractor${t.customer?.customerName ? ` • ${t.customer.customerName}` : ''}`,
+    })),
+    ...catalogModels.map((m) => ({
+      value: `catalog:${m.modelName}`,
+      label: m.modelName,
+      description: [m.hpDisplay, m.category || m.brand].filter(Boolean).join(' • ') || 'Massey Ferguson Catalog',
+    })),
+  ]
+
+  const handleTractorChange = (selectedVal) => {
+    if (!selectedVal) {
+      setFormData((prev) => ({
+        ...prev,
+        tractor: '',
+        catalogModelName: '',
+        registrationNumber: '',
+      }))
+      return
+    }
+
+    if (selectedVal.startsWith('catalog:')) {
+      const modelName = selectedVal.slice('catalog:'.length)
+      setFormData((prev) => ({
+        ...prev,
+        tractor: '',
+        catalogModelName: modelName,
+      }))
+      return
+    }
+
+    const selected = tractors.find((t) => t._id === selectedVal)
     setFormData((prev) => ({
       ...prev,
-      tractor: tractorId,
+      tractor: selectedVal,
+      catalogModelName: '',
+      registrationNumber: '',
       customer: selected?.customer?._id || selected?.customer || prev.customer,
       currentEngineHours: selected?.currentEngineHours || prev.currentEngineHours,
     }))
@@ -118,8 +178,8 @@ export default function AddService() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!formData.tractor) {
-      setFormError('Please select a tractor.')
+    if (!formData.tractor && !formData.catalogModelName) {
+      setFormError('Please select a tractor or tractor model.')
       return
     }
     if (!formData.customer) {
@@ -140,9 +200,19 @@ export default function AddService() {
           totalPrice: (Number(p.quantity) || 1) * (Number(p.unitPrice) || 0),
         }))
 
+      const selectedCatalog = formData.catalogModelName
+        ? findModelByName(formData.catalogModelName)
+        : null
+
       const payload = {
         customer: formData.customer,
-        tractor: formData.tractor,
+        ...(formData.tractor
+          ? { tractor: formData.tractor }
+          : {
+              tractorModelId: selectedCatalog && !selectedCatalog.isFallback ? selectedCatalog._id : undefined,
+              tractorModelName: formData.catalogModelName,
+              registrationNumber: formData.registrationNumber.trim() || undefined,
+            }),
         serviceType: formData.serviceType,
         serviceDate: formData.scheduledDate,
         scheduledDate: formData.scheduledDate,
@@ -167,7 +237,11 @@ export default function AddService() {
       navigate('/service/records')
     } catch (err) {
       console.error('Failed to create service job card:', err)
-      setFormError(err.response?.data?.message || 'Failed to create service record.')
+      setFormError(
+        err.response?.data?.error?.message ||
+          err.response?.data?.message ||
+          'Failed to create service record.'
+      )
     } finally {
       setSubmitting(false)
     }
@@ -245,23 +319,47 @@ export default function AddService() {
               <Select
                 label="Tractor Model"
                 required
-                value={formData.tractor}
+                value={tractorSelectValue}
                 onChange={(e) => handleTractorChange(e.target.value)}
-                options={[
-                  { value: '', label: '-- Select Tractor --' },
-                  ...availableTractors.map((t) => ({
-                    value: t._id,
-                    label: `${t.model || t.modelName || 'Tractor'} (${t.registrationNumber || t.chassisNumber || 'No Reg'}) - ${t.currentEngineHours || 0} hrs`,
-                  })),
-                ]}
-                placeholder="-- Select Tractor --"
+                options={tractorDropdownOptions}
+                placeholder="-- Select Tractor Model --"
               />
-              {formData.customer && availableTractors.length === 0 && (
-                <p className="mt-1.5 text-xs text-amber-600 flex items-center gap-1">
-                  <span>No tractors registered for this customer yet.</span>
-                  <Link to="/service/tractors" className="underline font-semibold hover:text-amber-800">
-                    Register Tractor
+              {activeSpecModel && (
+                <div
+                  onDoubleClick={() => setSpecModalModel(activeSpecModel)}
+                  title="Double-click to view specifications"
+                  className="mt-1.5 flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-200/80 text-xs text-slate-600 select-none cursor-pointer"
+                >
+                  <span className="truncate font-medium text-slate-700">
+                    {activeSpecModel.modelName}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setSpecModalModel(activeSpecModel)}
+                    className="inline-flex items-center gap-1 text-primary-600 hover:text-primary-700 font-semibold shrink-0 cursor-pointer"
+                  >
+                    <Info className="w-3.5 h-3.5" />
+                    <span>View Specs</span>
+                  </button>
+                </div>
+              )}
+              {formData.catalogModelName && !formData.tractor && (
+                <div className="mt-2.5">
+                  <Input
+                    label="Registration # (Optional — auto-registers tractor if new)"
+                    placeholder="e.g. TN-39-AZ-1234"
+                    value={formData.registrationNumber}
+                    onChange={(e) => setFormData({ ...formData, registrationNumber: e.target.value })}
+                  />
+                </div>
+              )}
+              {formData.customer && availableTractors.length === 0 && !formData.catalogModelName && (
+                <p className="mt-1.5 text-xs text-slate-500">
+                  No pre-registered tractors for this customer — select any tractor model above or{' '}
+                  <Link to="/service/tractors" className="underline font-semibold text-primary-600 hover:text-primary-700">
+                    register one in Fleet
                   </Link>
+                  .
                 </p>
               )}
             </div>
@@ -492,6 +590,12 @@ export default function AddService() {
           </Button>
         </div>
       </form>
+
+      <TractorModelSpecsModal
+        isOpen={Boolean(specModalModel)}
+        onClose={() => setSpecModalModel(null)}
+        model={specModalModel}
+      />
     </div>
   )
 }

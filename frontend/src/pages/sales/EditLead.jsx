@@ -34,19 +34,23 @@ import {
   LEAD_PRIORITIES, 
   TAMIL_NADU_DISTRICTS, 
   INDIAN_STATES, 
-  TRACTOR_MODELS 
 } from '../../constants'
+import useTractorModels from '../../hooks/useTractorModels'
 
 const HP_OPTIONS = [
   { value: '35', label: '35 HP (Compact / Orchard)' },
+  { value: '40', label: '40 HP (Field Utility)' },
   { value: '42', label: '42 HP (Standard Utility)' },
   { value: '45', label: '45 HP (Multi-Purpose 2WD)' },
+  { value: '46', label: '46 HP (Heavy Utility)' },
   { value: '48', label: '48 HP (Heavy Utility)' },
-  { value: '50', label: '50 HP (4WD High Traction)' },
+  { value: '50', label: '50 HP (Power / 4WD Traction)' },
   { value: '52', label: '52 HP (Field Specialist)' },
   { value: '55', label: '55 HP (Heavy Duty 4WD)' },
+  { value: '58', label: '58 HP (Commercial Farming)' },
   { value: '60', label: '60 HP (Commercial & Rotavator)' },
-  { value: '75', label: '75 HP (Turbo Commercial)' },
+  { value: '63', label: '63 HP (Trem-IV Heavy Commercial)' },
+  { value: '75', label: '75 HP (High-HP 4WD Commercial)' },
 ]
 
 const PURCHASE_PURPOSES = [
@@ -91,6 +95,7 @@ export default function EditLead() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { user: currentUser, isAdmin, hasPermission } = useAuth()
+  const { modelNames } = useTractorModels()
   const [serverError, setServerError] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -120,6 +125,7 @@ export default function EditLead() {
     register,
     handleSubmit,
     reset,
+    watch,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(leadEditSchema),
@@ -368,7 +374,13 @@ export default function EditLead() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Select
               label="Model Interested In"
-              options={TRACTOR_MODELS.map((m) => ({ value: m, label: m }))}
+              options={[
+                ...(leadData?.tractorModelInterested && !modelNames.includes(leadData.tractorModelInterested)
+                  ? [{ value: leadData.tractorModelInterested, label: leadData.tractorModelInterested }]
+                  : []),
+                ...modelNames.map((m) => ({ value: m, label: m })),
+              ]}
+              value={watch('tractorModelInterested') || ''}
               {...register('tractorModelInterested')}
             />
 
