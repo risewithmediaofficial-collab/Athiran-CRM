@@ -42,52 +42,36 @@ export default defineConfig({
     target: 'esnext',
     cssCodeSplit: true,
     chunkSizeWarningLimit: 600,
-    rollupOptions: {
+    rolldownOptions: {
       output: {
-        manualChunks(id) {
-          const normalizedId = id.replace(/\\/g, '/')
-          const pkgPath = normalizedId.split('/node_modules/').pop()
-          if (!normalizedId.includes('/node_modules/') || !pkgPath) return
-
-          // Match specific packages BEFORE core "react" so substring "react"
-          // in @tanstack/react-query, @radix-ui/react-select, lucide-react,
-          // and react-hook-form never collapses into vendor-react.
-          if (pkgPath.startsWith('@tanstack/')) {
-            return 'vendor-query'
-          }
-          if (
-            pkgPath.startsWith('@radix-ui/') ||
-            pkgPath.startsWith('lucide-react/') ||
-            pkgPath.startsWith('@floating-ui/') ||
-            pkgPath.startsWith('react-remove-scroll') ||
-            pkgPath.startsWith('use-sidecar/') ||
-            pkgPath.startsWith('use-callback-ref/') ||
-            pkgPath.startsWith('aria-hidden/') ||
-            pkgPath.startsWith('clsx/') ||
-            pkgPath.startsWith('tailwind-merge/')
-          ) {
-            return 'vendor-ui'
-          }
-          if (
-            pkgPath.startsWith('react-hook-form/') ||
-            pkgPath.startsWith('@hookform/') ||
-            pkgPath.startsWith('zod/')
-          ) {
-            return 'vendor-forms'
-          }
-          if (pkgPath.startsWith('axios/') || pkgPath.startsWith('dayjs/')) {
-            return 'vendor-utils'
-          }
-          if (
-            pkgPath.startsWith('react/') ||
-            pkgPath.startsWith('react-dom/') ||
-            pkgPath.startsWith('scheduler/') ||
-            pkgPath.startsWith('react-router/') ||
-            pkgPath.startsWith('react-router-dom/') ||
-            pkgPath.startsWith('@remix-run/router/')
-          ) {
-            return 'vendor-react'
-          }
+        codeSplitting: {
+          groups: [
+            {
+              name: 'vendor-react',
+              test: /[\\/]node_modules[\\/](?:react|react-dom|scheduler|react-router|react-router-dom|@remix-run[\\/]router)[\\/]/,
+              priority: 50,
+            },
+            {
+              name: 'vendor-query',
+              test: /[\\/]node_modules[\\/]@tanstack[\\/]/,
+              priority: 40,
+            },
+            {
+              name: 'vendor-ui',
+              test: /[\\/]node_modules[\\/](?:@radix-ui|lucide-react|@floating-ui|react-remove-scroll(?:-bar)?|react-style-singleton|use-sidecar|use-callback-ref|aria-hidden|clsx|tailwind-merge)[\\/]/,
+              priority: 30,
+            },
+            {
+              name: 'vendor-forms',
+              test: /[\\/]node_modules[\\/](?:react-hook-form|@hookform|zod)[\\/]/,
+              priority: 20,
+            },
+            {
+              name: 'vendor-utils',
+              test: /[\\/]node_modules[\\/](?:axios|dayjs)[\\/]/,
+              priority: 10,
+            },
+          ],
         },
       },
     },
