@@ -1,6 +1,7 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, Suspense } from 'react'
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import LoadingSpinner from '../components/ui/LoadingSpinner'
 import {
   Tractor,
   LayoutDashboard,
@@ -309,7 +310,15 @@ export default function MainLayout() {
 
         {/* Main Body */}
         <main className="flex-1 p-6 lg:p-8 w-full max-w-7xl mx-auto">
-          <Outlet />
+          <Suspense
+            fallback={
+              <div className="flex h-full min-h-[400px] items-center justify-center">
+                <LoadingSpinner size="md" message="Loading..." />
+              </div>
+            }
+          >
+            <Outlet />
+          </Suspense>
         </main>
       </div>
     </div>

@@ -1,6 +1,7 @@
-import React from 'react'
+import React, { Suspense } from 'react'
 import { Outlet, Navigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import LoadingSpinner from '../components/ui/LoadingSpinner'
 import { ShieldCheck, Tractor, Users, Wrench } from 'lucide-react'
 
 export default function AuthLayout() {
@@ -28,7 +29,15 @@ export default function AuthLayout() {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md px-4 sm:px-0">
         <div className="bg-surface py-8 px-6 shadow-md rounded-2xl border border-border sm:px-10">
-          <Outlet />
+          <Suspense
+            fallback={
+              <div className="py-12 flex justify-center">
+                <LoadingSpinner size="md" message="Loading..." />
+              </div>
+            }
+          >
+            <Outlet />
+          </Suspense>
         </div>
 
         <div className="mt-8 grid grid-cols-3 gap-2 text-center text-xs text-content-secondary">
